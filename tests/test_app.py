@@ -111,6 +111,26 @@ class TestRatingSteps:
         assert len(cells) == 35  # 5 assets x 7 tools
         assert all(cell.value == "N/A" for cell in cells)
 
+    def test_blast_matrix_is_laid_out_with_tools_as_rows_and_assets_as_columns(self):
+        app = set_page_radios(complete_intro(run_app()), "impact__calendar__", 3)
+        app = set_page_radios(click(app, "Next"), "sensitivity__calendar__", 3)
+        app = click(app, "Next")
+        text = page_text(app)
+        assert "Tool \ Virtual asset" in text
+        # Column headers are the matrix assets; row headings are the tools.
+        for asset in ("executive", "recruiting", "free-busy-availability"):
+            assert f'class="grid-head">{asset}<' in text
+        for tool in ("get-current-time", "delete-event"):
+            assert f"<b>{tool}</b>" in text
+
+    def test_impact_and_sensitivity_render_as_a_single_table(self):
+        app = complete_intro(run_app())
+        impact_text = page_text(app)
+        assert 'class="grid-head">Tool<' in impact_text
+        app = set_page_radios(app, "impact__calendar__", 3)
+        sensitivity_text = page_text(click(app, "Next"))
+        assert 'class="grid-head">Virtual asset<' in sensitivity_text
+
     def test_blast_step_blocks_when_every_cell_is_left_na(self):
         app = set_page_radios(complete_intro(run_app()), "impact__calendar__", 3)
         app = set_page_radios(click(app, "Next"), "sensitivity__calendar__", 3)

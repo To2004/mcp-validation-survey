@@ -52,7 +52,7 @@ RATING_OPTIONS = [1, 2, 3, 4, 5]
 FORM_CSS = """
 <style>
   .stApp { background: #f0ebf8; }
-  .block-container { max-width: 860px; padding-top: 2rem; padding-bottom: 4rem; }
+  .block-container { max-width: 1150px; padding-top: 2rem; padding-bottom: 4rem; }
   /* Every top-level bordered container becomes a Forms-style white card. */
   div[data-testid="stVerticalBlockBorderWrapper"] {
       background: #ffffff;
@@ -71,8 +71,38 @@ FORM_CSS = """
   .form-header h1 { margin: 0 0 6px 0; font-size: 30px; font-weight: 400; color: #202124; }
   .form-header p  { margin: 0; color: #5f6368; font-size: 14px; }
   .required { color: #d93025; }
-  .question-title { font-size: 16px; color: #202124; margin-bottom: 2px; }
-  .question-help  { font-size: 13px; color: #5f6368; margin-bottom: 10px; }
+  .question-title { font-size: 17px; color: #202124; margin-bottom: 2px; }
+  /* Descriptions and level definitions: larger, on their own tinted panel, so the
+     explanation is clearly separate from the thing being rated. */
+  .question-help {
+      font-size: 15px;
+      line-height: 1.55;
+      color: #3c4043;
+      background: #f1f3f4;
+      border-left: 3px solid #673ab7;
+      padding: 9px 13px;
+      border-radius: 4px;
+      margin: 6px 0 10px 0;
+  }
+  .level-def {
+      font-size: 15px;
+      line-height: 1.55;
+      color: #3c4043;
+      background: #f8f5ff;
+      border-left: 3px solid #673ab7;
+      padding: 10px 14px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+  }
+  .level-def b { color: #4a2b8c; }
+  .grid-head {
+      font-size: 13px;
+      font-weight: 600;
+      color: #5f6368;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      padding-bottom: 4px;
+  }
   .stProgress > div > div > div > div { background-color: #673ab7; }
 </style>
 """
@@ -284,40 +314,84 @@ def scale_reference(config: SurveyConfig, dimension: str) -> None:
     label = SCALE_LABELS[dimension]
     with st.expander(f"{label} levels — click to read the definitions", expanded=False):
         for level in config.scales[dimension]:
-            st.markdown(f"**{level.heading}** — {level.meaning}")
+            st.markdown(
+                f'<div class="level-def"><b>{level.heading}</b> — {level.meaning}</div>',
+                unsafe_allow_html=True,
+            )
 
 
-def radio_grid(config: SurveyConfig, dimension: str, server: Server, items, key_fn) -> None:
-    """One card per item: name, description, and a horizontal 1-5 radio."""
-    for item in items:
-        with st.container(border=True):
-            st.markdown(f'<div class="question-title"><b>{item.name}</b></div>', unsafe_allow_html=True)
-            if item.desc:
-                st.markdown(f'<div class="question-help">{item.desc}</div>', unsafe_allow_html=True)
-            rating_radio(f"{SCALE_LABELS[dimension]} rating for {item.name}", key_fn(server, item.name))
+def radio_grid(config: SurveyConfig, dimension: str, server: Server, items, key_fn, noun: str) -> None:
+    """One table: a row per item, with its description, and a 1-5 radio per row."""
+    with st.container(border=True):
+        heading, scale = st.columns([3, 4])
+        heading.markdown(f'<div class="grid-head">{noun}</div>', unsafe_allow_html=True)
+        scale.markdown(
+            '<div class="grid-head">Rating — 1 (lowest) to 5 (highest)</div>',
+            unsafe_allow_html=True,
+        )
+        for position, item in enumerate(items):
+            if position:
+                st.divider()
+            label_column, rating_column = st.columns([3, 4])
+            with label_column:
+                st.markdown(
+                    f'<div class="question-title"><b>{item.name}</b></div>', unsafe_allow_html=True
+                )
+                if item.desc:
+                    st.markdown(f'<div class="question-help">{item.desc}</div>', unsafe_allow_html=True)
+            with rating_column:
+                rating_radio(
+                    f"{SCALE_LABELS[dimension]} rating for {item.name}", key_fn(server, item.name)
+                )
 
 
 def blast_matrix(server: Server) -> None:
-    """Asset x tool matrix. Every cell defaults to N/A — an unscored pair is a finding."""
-    st.caption(
-        "Each row is a virtual asset, each column a tool. Leave a cell at "
-        f"**{NOT_APPLICABLE}** where that tool does not act on that asset."
-    )
-    with st.expander("What each asset in this matrix holds", expanded=False):
-        for asset in server.blast_assets:
-            st.markdown(f"**{asset.name}** — {asset.desc}")
+    """Tool x asset matrix: a row per tool, a column per virtual asset.
 
-    for asset in server.blast_assets:
-        with st.container(border=True):
-            st.markdown(f'<div class="question-title"><b>{asset.name}</b></div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="question-help">{asset.desc}</div>', unsafe_allow_html=True)
-            for row_start in range(0, len(server.blast_tools), 4):
-                chunk = server.blast_tools[row_start : row_start + 4]
-                for column, tool in zip(st.columns(len(chunk)), chunk):
-                    with column:
-                        key = blast_key(server, asset.name, tool)
-                        kwargs = {} if key in st.session_state else {"index": 0}
-                        st.selectbox(tool, options=BLAST_OPTIONS, key=key, **kwargs)
+    Every cell defaults to N/A — an unscored pair is a finding, not a low score.
+    """
+    st.caption(
+        "Each row is a tool, each column a virtual asset. Enter 1–5 where the tool acts "
+        f"on that asset, and leave **{NOT_APPLICABLE}** where it does not."
+    )
+    with st.expander("What each virtual asset holds", expanded=False):
+        for asset in server.blast_assets:
+            st.markdown(
+                f'<div class="level-def"><b>{asset.name}</b> — {asset.desc}</div>',
+                unsafe_allow_html=True,
+            )
+
+    description_of = {tool.name: tool.desc for tool in server.tools}
+    widths = [3] + [2] * len(server.blast_assets)
+
+    with st.container(border=True):
+        header = st.columns(widths)
+        header[0].markdown('<div class="grid-head">Tool \\ Virtual asset</div>', unsafe_allow_html=True)
+        for column, asset in zip(header[1:], server.blast_assets):
+            column.markdown(f'<div class="grid-head">{asset.name}</div>', unsafe_allow_html=True)
+
+        for position, tool in enumerate(server.blast_tools):
+            if position:
+                st.divider()
+            row = st.columns(widths)
+            with row[0]:
+                st.markdown(f'<div class="question-title"><b>{tool}</b></div>', unsafe_allow_html=True)
+                if description_of.get(tool):
+                    st.markdown(
+                        f'<div class="question-help">{description_of[tool]}</div>',
+                        unsafe_allow_html=True,
+                    )
+            for column, asset in zip(row[1:], server.blast_assets):
+                with column:
+                    key = blast_key(server, asset.name, tool)
+                    kwargs = {} if key in st.session_state else {"index": 0}
+                    st.selectbox(
+                        f"{tool} acting on {asset.name}",
+                        options=BLAST_OPTIONS,
+                        key=key,
+                        label_visibility="collapsed",
+                        **kwargs,
+                    )
 
 
 # -------------------------------------------------------------------------- pages
@@ -356,10 +430,10 @@ def render_step(config: SurveyConfig, server: Server, step: str) -> None:
     scale_reference(config, step)
 
     if step == "impact":
-        radio_grid(config, "impact", server, server.tools, impact_key)
+        radio_grid(config, "impact", server, server.tools, impact_key, "Tool")
     elif step == "sensitivity":
         st.caption("How sensitive is each of these virtual assets to this organization?")
-        radio_grid(config, "sensitivity", server, server.assets, sensitivity_key)
+        radio_grid(config, "sensitivity", server, server.assets, sensitivity_key, "Virtual asset")
     else:
         blast_matrix(server)
 
