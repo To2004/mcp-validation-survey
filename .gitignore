@@ -7,3 +7,7 @@ venv/
 # Response data and credentials must never be committed.
 data/
 .streamlit/secrets.toml
+
+# Local dev tooling. The repo is public and this carries the Supabase project ref;
+# delete this line if you want the MCP config shared with collaborators.
+.mcp.json
