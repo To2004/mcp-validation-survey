@@ -50,35 +50,44 @@ RATING_OPTIONS = [1, 2, 3, 4, 5]
 
 FORM_CSS = """
 <style>
-  .stApp { background: #f0ebf8; }
-  .block-container { max-width: 1150px; padding-top: 2rem; padding-bottom: 4rem; }
-  /* Every top-level bordered container becomes a Forms-style white card. */
+  /* Palette: neutral page, white cards, one accent. Kept low-saturation so the
+     rating grids stay legible over long sessions (see docs/design-notes.md). */
+  :root {
+      --accent: #2563eb;
+      --ink: #0f172a;
+      --ink-soft: #475569;
+      --line: #d8e0ec;
+      --zebra: #f7f9fc;
+  }
+  .stApp { background: #eef2f7; }
+  .block-container { max-width: 1180px; padding-top: 1.6rem; padding-bottom: 4rem; }
+  html, body, [class*="css"] { color: var(--ink); }
+
   div[data-testid="stVerticalBlockBorderWrapper"] {
       background: #ffffff;
-      border: 1px solid #dadce0 !important;
-      border-radius: 8px;
-      padding: 4px 8px;
+      border: 1px solid var(--line) !important;
+      border-radius: 10px;
+      padding: 6px 10px;
   }
   .form-header {
       background: #ffffff;
-      border: 1px solid #dadce0;
-      border-top: 10px solid #673ab7;
-      border-radius: 8px;
-      padding: 22px 24px 18px 24px;
+      border: 1px solid var(--line);
+      border-top: 8px solid var(--accent);
+      border-radius: 10px;
+      padding: 22px 26px 18px 26px;
       margin-bottom: 14px;
   }
-  .form-header h1 { margin: 0 0 6px 0; font-size: 30px; font-weight: 400; color: #202124; }
-  .form-header p  { margin: 0; color: #5f6368; font-size: 14px; }
+  .form-header h1 { margin: 0 0 6px 0; font-size: 29px; font-weight: 600; color: var(--ink); }
+  .form-header p  { margin: 0; color: var(--ink-soft); font-size: 14px; }
   .required { color: #d93025; }
-  .question-title { font-size: 17px; color: #202124; margin-bottom: 2px; }
-  /* Descriptions and level definitions: larger, on their own tinted panel, so the
-     explanation is clearly separate from the thing being rated. */
+  .question-title { font-size: 17px; color: var(--ink); margin-bottom: 2px; }
+
   .question-help {
       font-size: 15px;
       line-height: 1.55;
-      color: #3c4043;
-      background: #f1f3f4;
-      border-left: 3px solid #673ab7;
+      color: var(--ink-soft);
+      background: #f1f5f9;
+      border-left: 3px solid var(--accent);
       padding: 9px 13px;
       border-radius: 4px;
       margin: 6px 0 10px 0;
@@ -86,50 +95,110 @@ FORM_CSS = """
   .level-def {
       font-size: 15px;
       line-height: 1.55;
-      color: #3c4043;
-      background: #f8f5ff;
-      border-left: 3px solid #673ab7;
+      color: var(--ink-soft);
+      background: #f8fafc;
+      border-left: 3px solid var(--accent);
       padding: 10px 14px;
       border-radius: 4px;
       margin-bottom: 8px;
   }
-  .level-def b { color: #4a2b8c; }
-  .grid-head {
-      font-size: 13px;
-      font-weight: 600;
-      color: #5f6368;
-      text-transform: uppercase;
-      letter-spacing: .4px;
-      padding-bottom: 4px;
+  .level-def b { color: var(--accent); }
+
+  /* How-to-answer callout above each rating grid. */
+  .howto {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin: 10px 0 14px 0;
+      font-size: 15px;
+      line-height: 1.6;
+      color: #1e3a8a;
   }
-  /* Spread the 1-5 radio options evenly so they line up under the numbered header. */
-  div[role="radiogroup"] { display: flex !important; width: 100%; gap: 0 !important; }
-  div[role="radiogroup"] > label {
-      flex: 1 1 0 !important;
+  .howto b { color: #1e40af; }
+
+  /* ---- Likert grid -------------------------------------------------------
+     Each row is its own radio group (accessible to screen readers as a normal
+     question) but is laid out on a 5-column CSS grid so the circles line up
+     under the numbered header. */
+  .grid-head {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink-soft);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      padding: 6px 0 8px 0;
+  }
+  .scale-head {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      width: 100%;
+      padding-bottom: 6px;
+  }
+  .scale-head span {
+      text-align: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink-soft);
+      border-left: 1px solid var(--line);
+      padding: 0 2px;
+      line-height: 1.25;
+  }
+  .scale-head span small {
+      display: block;
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: none;
+      letter-spacing: 0;
+      color: #94a3b8;
+  }
+  div[data-testid="stRadio"] > div { width: 100% !important; }
+  div[data-testid="stRadio"] div[role="radiogroup"],
+  div[data-testid="stRadioGroup"] {
+      display: grid !important;
+      grid-template-columns: repeat(5, 1fr) !important;
+      width: 100% !important;
+      gap: 0 !important;
+  }
+  div[data-testid="stRadio"] div[role="radiogroup"] > *,
+  div[data-testid="stRadioGroup"] > * {
+      display: flex !important;
+      align-items: center !important;
       justify-content: center !important;
       margin: 0 !important;
+      padding: 12px 0 !important;
+      border-left: 1px solid var(--line);
       min-width: 0;
+      cursor: pointer;
   }
-  /* The header row already numbers the columns, so hide the per-option text. */
-  div[role="radiogroup"] > label > div:last-child { display: none !important; }
-  .scale-head { display: flex; width: 100%; }
-  .scale-head span {
-      flex: 1 1 0;
-      text-align: center;
-      font-size: 13px;
-      font-weight: 600;
-      color: #5f6368;
+  div[data-testid="stRadio"] div[role="radiogroup"] > *:hover,
+  div[data-testid="stRadioGroup"] > *:hover { background: #eff6ff; }
+  /* The header row numbers the columns, so hide each option's own label text. */
+  div[data-testid="stRadio"] label > div:last-child { display: none !important; }
+
+  /* Subtle zebra striping on grid rows. Low saturation, per readability research. */
+  div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stHorizontalBlock"] {
+      align-items: center;
+      border-top: 1px solid var(--line);
   }
+  div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stHorizontalBlock"]:nth-of-type(even) {
+      background: var(--zebra);
+  }
+  div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stHorizontalBlock"]:first-of-type {
+      border-top: none;
+  }
+
   .na-cell {
       text-align: center;
-      color: #9aa0a6;
-      background: #f1f3f4;
-      border: 1px dashed #dadce0;
+      color: #94a3b8;
+      background: #f1f5f9;
+      border: 1px dashed var(--line);
       border-radius: 4px;
       padding: 7px 0;
-      font-size: 14px;
+      font-size: 13px;
+      letter-spacing: .5px;
   }
-  .stProgress > div > div > div > div { background-color: #673ab7; }
+  .stProgress > div > div > div > div { background-color: var(--accent); }
 </style>
 """
 
@@ -336,6 +405,30 @@ def rating_radio(label: str, key: str, options=RATING_OPTIONS):
     )
 
 
+HOWTO = {
+    "impact": (
+        "<b>How to answer:</b> each row is one tool. Pick one circle per row — the "
+        "column number is the Tool Impact level. Open <i>Tool Impact levels</i> above "
+        "if you need the definitions. Judge each tool on its own, not against the "
+        "others; levels may repeat."
+    ),
+    "sensitivity": (
+        "<b>How to answer:</b> each row is one virtual asset. Pick one circle per row — "
+        "the column number is the Asset Sensitivity level. Judge each asset on its own; "
+        "levels may repeat."
+    ),
+    "blast": (
+        "<b>How to answer:</b> each row is a tool, each column a virtual asset. Choose "
+        "1–5 in every open cell. Cells shown as <b>N/A</b> are pairs the tool does not "
+        "act on — they are fixed and need no answer."
+    ),
+}
+
+
+def how_to_answer(dimension: str) -> None:
+    st.markdown(f'<div class="howto">{HOWTO[dimension]}</div>', unsafe_allow_html=True)
+
+
 def scale_reference(config: SurveyConfig, dimension: str) -> None:
     label = SCALE_LABELS[dimension]
     with st.expander(f"{label} levels — click to read the definitions", expanded=False):
@@ -349,17 +442,18 @@ def scale_reference(config: SurveyConfig, dimension: str) -> None:
 def radio_grid(config: SurveyConfig, dimension: str, server: Server, items, key_fn, noun: str) -> None:
     """One table: a row per item, with its description, and a 1-5 radio per row."""
     with st.container(border=True):
+        levels = config.scales[dimension]
         heading, scale = st.columns([3, 4])
         heading.markdown(f'<div class="grid-head">{noun}</div>', unsafe_allow_html=True)
-        scale.markdown(
-            '<div class="scale-head">'
-            + "".join(f"<span>{value}</span>" for value in RATING_OPTIONS)
-            + "</div>",
-            unsafe_allow_html=True,
-        )
-        for position, item in enumerate(items):
-            if position:
-                st.divider()
+        # Anchor the ends of the scale, per survey-design guidance: a bare 1-5 row
+        # leaves the direction of the scale ambiguous.
+        cells = []
+        for level in levels:
+            anchor = level.label if level.value in (1, 5) else ""
+            cells.append(f"<span>{level.value}<small>{anchor}</small></span>")
+        scale.markdown('<div class="scale-head">' + "".join(cells) + "</div>", unsafe_allow_html=True)
+
+        for item in items:
             label_column, rating_column = st.columns([3, 4])
             with label_column:
                 st.markdown(
@@ -380,11 +474,6 @@ def blast_matrix(server: Server) -> None:
     Live cells start unset, so an unanswered cell stays distinguishable from a
     deliberate 1.
     """
-    st.caption(
-        "Each row is a tool, each column a virtual asset. Score every open cell from 1 "
-        "to 5. Cells marked N/A are pairs the tool does not act on — they are fixed and "
-        "need no answer."
-    )
     with st.expander("What each virtual asset holds", expanded=False):
         for asset in server.blast_assets:
             st.markdown(
@@ -401,9 +490,7 @@ def blast_matrix(server: Server) -> None:
         for column, asset in zip(header[1:], server.blast_assets):
             column.markdown(f'<div class="grid-head">{asset.name}</div>', unsafe_allow_html=True)
 
-        for position, tool in enumerate(server.blast_tools):
-            if position:
-                st.divider()
+        for tool in server.blast_tools:
             row = st.columns(widths)
             with row[0]:
                 st.markdown(f'<div class="question-title"><b>{tool}</b></div>', unsafe_allow_html=True)
@@ -463,6 +550,8 @@ def render_step(config: SurveyConfig, server: Server, step: str) -> None:
     st.markdown(f"#### {STEP_TITLES[step]}")
     st.write(config.step_prompts[step])
     scale_reference(config, step)
+
+    how_to_answer(step)
 
     if step == "impact":
         radio_grid(config, "impact", server, server.tools, impact_key, "Tool")

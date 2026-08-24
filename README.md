@@ -84,6 +84,7 @@ survey and from the CSV. To pilot with just Google Calendar, disable the other f
 | [docs/data-format.md](docs/data-format.md) | CSV columns, value meanings, analysis notes |
 | [docs/editing-the-survey.md](docs/editing-the-survey.md) | Changing questions, regenerating the config |
 | [docs/known-issues.md](docs/known-issues.md) | Discrepancies found in the source form |
+| [docs/design-notes.md](docs/design-notes.md) | Layout, accessibility and colour choices |
 
 ## Tests
 
