@@ -109,7 +109,8 @@ class TestRatingSteps:
         app = click(app, "Next")
         cells = [b for b in app.selectbox if b.key and b.key.startswith("blast__calendar__")]
         assert len(cells) == 35  # 5 assets x 7 tools
-        assert all(cell.value == "N/A" for cell in cells)
+        assert all(cell.value is None for cell in cells)  # no N/A option, nothing preselected
+        assert all("N/A" not in cell.options for cell in cells)
 
     def test_blast_matrix_is_laid_out_with_tools_as_rows_and_assets_as_columns(self):
         app = set_page_radios(complete_intro(run_app()), "impact__calendar__", 3)
@@ -131,20 +132,31 @@ class TestRatingSteps:
         sensitivity_text = page_text(click(app, "Next"))
         assert 'class="grid-head">Virtual asset<' in sensitivity_text
 
-    def test_blast_step_blocks_when_every_cell_is_left_na(self):
+    def test_blast_step_blocks_until_every_cell_is_rated(self):
         app = set_page_radios(complete_intro(run_app()), "impact__calendar__", 3)
         app = set_page_radios(click(app, "Next"), "sensitivity__calendar__", 3)
         app = click(click(app, "Next"), "Next")
-        assert "every cell is N/A" in errors(app)
+        assert "35 of 35 tool/asset cells are not yet rated" in errors(app)
 
-    def test_scoring_one_blast_cell_unblocks_the_step(self):
+    def test_scoring_only_some_blast_cells_still_blocks(self):
         app = set_page_radios(complete_intro(run_app()), "impact__calendar__", 3)
         app = set_page_radios(click(app, "Next"), "sensitivity__calendar__", 3)
         app = click(app, "Next")
         next(b for b in app.selectbox if b.key.startswith("blast__calendar__")).set_value("4")
         app = click(app.run(), "Next")
+        assert "34 of 35 tool/asset cells are not yet rated" in errors(app)
+        assert app.session_state["page"] == 3
+
+    def test_scoring_every_blast_cell_unblocks_the_step(self):
+        app = set_page_radios(complete_intro(run_app()), "impact__calendar__", 3)
+        app = set_page_radios(click(app, "Next"), "sensitivity__calendar__", 3)
+        app = click(app, "Next")
+        for box in app.selectbox:
+            if box.key and box.key.startswith("blast__calendar__"):
+                box.set_value("4")
+        app = click(app.run(), "Next")
         assert not app.exception
-        assert "every cell is N/A" not in errors(app)
+        assert not errors(app)
         assert app.session_state["page"] == 4
 
 

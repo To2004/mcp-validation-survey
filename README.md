@@ -66,8 +66,8 @@ sens__<server>__<asset>             e.g. sens__calendar__executive
 blast__<server>__<asset>__<tool>    e.g. blast__calendar__executive__get-event
 ```
 
-Blast Radius cells are `1`–`5` or `N/A`. `N/A` means the participant judged that the
-tool does not act on that asset — it is a real answer, not a missing one.
+Every rating, including every Blast Radius cell, is `1`–`5`. The matrix has no N/A
+option: a participant scores all of a server's tool × asset pairs before moving on.
 
 ## Running only some servers
 

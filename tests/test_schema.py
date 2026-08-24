@@ -4,7 +4,6 @@ import pytest
 
 from survey.config import SurveyConfig, load_config_from_dict
 from survey.schema import (
-    NOT_APPLICABLE,
     blast_column,
     csv_columns,
     impact_column,
@@ -120,15 +119,16 @@ class TestResponseToRow:
         assert row["sens__calendar__executive"] == 4
         assert row["blast__calendar__executive__get-event"] == 2
 
-    def test_unrated_blast_cell_is_written_as_na_not_blank(self, config, answers):
+    def test_unrated_blast_cell_is_written_as_blank(self, config, answers):
+        # The matrix has no N/A option, so a blank can only mean "not answered".
         answers["blast"]["calendar"].pop(("executive", "delete-event"))
         row = response_to_row(config, answers, submission_id="s1", submitted_at="t")
-        assert row["blast__calendar__executive__delete-event"] == NOT_APPLICABLE
+        assert row["blast__calendar__executive__delete-event"] == ""
 
-    def test_explicit_na_is_preserved(self, config, answers):
-        answers["blast"]["calendar"][("executive", "get-event")] = NOT_APPLICABLE
+    def test_blast_values_are_written_as_integers(self, config, answers):
+        answers["blast"]["calendar"][("executive", "get-event")] = "5"
         row = response_to_row(config, answers, submission_id="s1", submitted_at="t")
-        assert row["blast__calendar__executive__get-event"] == NOT_APPLICABLE
+        assert row["blast__calendar__executive__get-event"] == 5
 
     def test_consent_is_written_as_boolean_word(self, config, answers):
         row = response_to_row(config, answers, submission_id="s1", submitted_at="t")
@@ -173,9 +173,9 @@ class TestLongFormat:
         assert all(r["asset"] == "" for r in impact)
         assert {r["tool"] for r in impact} == {"get-event", "delete-event"}
 
-    def test_na_blast_cells_are_kept_so_unscored_pairs_stay_visible(self, config, answers):
-        answers["blast"]["calendar"][("executive", "get-event")] = NOT_APPLICABLE
+    def test_every_blast_cell_appears_even_when_unanswered(self, config, answers):
+        answers["blast"]["calendar"].pop(("executive", "get-event"))
         row = response_to_row(config, answers, submission_id="s1", submitted_at="t")
-        records = long_format_rows(config, [row])
-        na = [r for r in records if r["value"] == NOT_APPLICABLE]
-        assert len(na) == 1
+        blast = [r for r in long_format_rows(config, [row]) if r["dimension"] == "blast"]
+        assert len(blast) == 2
+        assert [r for r in blast if r["value"] == ""]

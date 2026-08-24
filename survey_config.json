@@ -89,7 +89,7 @@
   "step_prompts": {
     "impact": "Rate the tool impact of MCP tools. Think about what the tool may perform. A short description of every tool is given beneath its name. Judge each tool on its own, not against the others.",
     "sensitivity": "Rate the asset itself, whichever tool reaches it. A short description of every asset is given beneath its name. Judge each asset on its own, not against the others. Levels may repeat. Rate what the asset normally holds, not the worst it could ever hold.",
-    "blast": "Rate the potential effect of a tool on an asset at scale. Think about “How far does one call reach?” Enter 1–5 where the tool acts on that asset, and N/A where it does not. A non-touching pair is not a low score — it is unscored."
+    "blast": "Rate the potential effect of a tool on an asset at scale. Think about “How far does one call reach?” Score every tool and asset pair from 1 to 5. Where a tool barely touches an asset, that is a 1 — the lowest rung of the scale, not a skipped cell."
   },
   "servers": [
     {

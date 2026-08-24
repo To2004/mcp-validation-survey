@@ -23,7 +23,6 @@ import streamlit as st
 
 from survey.config import ConfigError, Server, SurveyConfig, lint, load_config
 from survey.schema import (
-    NOT_APPLICABLE,
     csv_columns,
     long_format_rows,
     missing_required,
@@ -46,7 +45,7 @@ SCALE_LABELS = {
     "sensitivity": "Asset Sensitivity",
     "blast": "Blast Radius",
 }
-BLAST_OPTIONS = [NOT_APPLICABLE, "1", "2", "3", "4", "5"]
+BLAST_OPTIONS = ["1", "2", "3", "4", "5"]
 RATING_OPTIONS = [1, 2, 3, 4, 5]
 
 FORM_CSS = """
@@ -222,7 +221,7 @@ def collect_answers(config: SurveyConfig) -> dict:
             asset.name: state.get(sensitivity_key(server, asset.name)) for asset in server.assets
         }
         answers["blast"][server.key] = {
-            (asset, tool): state.get(blast_key(server, asset, tool), NOT_APPLICABLE)
+            (asset, tool): state.get(blast_key(server, asset, tool))
             for asset, tool in server.blast_cells
         }
     return answers
@@ -348,11 +347,10 @@ def radio_grid(config: SurveyConfig, dimension: str, server: Server, items, key_
 def blast_matrix(server: Server) -> None:
     """Tool x asset matrix: a row per tool, a column per virtual asset.
 
-    Every cell defaults to N/A — an unscored pair is a finding, not a low score.
+    Cells start unset so an unanswered cell stays distinguishable from a deliberate 1.
     """
     st.caption(
-        "Each row is a tool, each column a virtual asset. Enter 1–5 where the tool acts "
-        f"on that asset, and leave **{NOT_APPLICABLE}** where it does not."
+        "Each row is a tool, each column a virtual asset. Score every cell from 1 to 5."
     )
     with st.expander("What each virtual asset holds", expanded=False):
         for asset in server.blast_assets:
@@ -384,12 +382,13 @@ def blast_matrix(server: Server) -> None:
             for column, asset in zip(row[1:], server.blast_assets):
                 with column:
                     key = blast_key(server, asset.name, tool)
-                    kwargs = {} if key in st.session_state else {"index": 0}
+                    kwargs = {} if key in st.session_state else {"index": None}
                     st.selectbox(
                         f"{tool} acting on {asset.name}",
                         options=BLAST_OPTIONS,
                         key=key,
                         label_visibility="collapsed",
+                        placeholder="—",
                         **kwargs,
                     )
 

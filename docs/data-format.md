@@ -37,16 +37,15 @@ name that would break this.
 | --- | --- |
 | Tool Impact | 1–5 (Liveness to Irreversible) |
 | Asset Sensitivity | 1–5 (Public to Critical) |
-| Blast Radius | 1–5 (Negligible to Systemic), or `N/A` |
+| Blast Radius | 1–5 (Negligible to Systemic) |
 
-**`N/A` is an answer, not a gap.** It records the participant's judgement that the
-tool does not act on that asset. Treat it as a structural zero: exclude it from mean
-blast scores, but count it when comparing the participant's reachability judgement
-against the scanner's own N/A cells — that agreement is itself a result.
+The Blast Radius matrix has no N/A option: every tool/asset cell is scored 1–5, and a
+pair a tool barely reaches is a 1. The scanner still emits N/A for pairs that do not
+exist on the asset register, so decide how to handle those cells when comparing (drop
+them, or treat scanner-N/A as 1) and say which.
 
-Every rating is required except inside the Blast Radius matrix, where the app requires
-only that at least one cell per matrix is scored. Blank rating cells therefore should
-not occur.
+Every rating in the survey is required, so blank rating cells should not occur. A
+blank can only mean the row was written by an older version of the app.
 
 ## Long export — one row per rating
 

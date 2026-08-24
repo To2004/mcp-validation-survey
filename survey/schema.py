@@ -6,6 +6,10 @@ Two shapes are produced from the same submission:
   format, and the one to open in Excel or `pandas.read_csv`.
 * **long** — one record per rating, produced on demand for the researcher. This is
   the shape that joins cleanly against the scanner's own per-tool/per-asset output.
+
+Every rating is 1-5. The Blast Radius matrix has no N/A option: each tool/asset cell
+carries a score, so a pair the tool does not really reach is recorded as 1 rather than
+being marked unscored.
 """
 
 from __future__ import annotations
@@ -13,8 +17,6 @@ from __future__ import annotations
 from typing import Any, Iterable, Sequence
 
 from survey.config import COLUMN_SEPARATOR, Server, SurveyConfig
-
-NOT_APPLICABLE = "N/A"
 
 METADATA_COLUMNS = (
     "submission_id",
@@ -65,16 +67,6 @@ def _rating(value: Any) -> Any:
     return int(value)
 
 
-def _blast_rating(value: Any) -> Any:
-    """Blast cells are 1-5 or the explicit N/A marker; an unset cell means N/A.
-
-    An unscored pair is a finding, not a gap, so it is recorded rather than blanked.
-    """
-    if value is None or value == "" or value == NOT_APPLICABLE:
-        return NOT_APPLICABLE
-    return int(value)
-
-
 def response_to_row(
     config: SurveyConfig,
     answers: dict[str, Any],
@@ -108,7 +100,7 @@ def response_to_row(
                 sensitivity.get(server.key, {}).get(asset.name)
             )
         for asset, tool in server.blast_cells:
-            row[blast_column(server.key, asset, tool)] = _blast_rating(
+            row[blast_column(server.key, asset, tool)] = _rating(
                 blast.get(server.key, {}).get((asset, tool))
             )
 
@@ -168,8 +160,8 @@ def long_format_rows(
 def missing_required(config: SurveyConfig, server: Server, answers: dict[str, Any]) -> list[str]:
     """Human-readable list of what is still unanswered in one server section.
 
-    Blast cells default to N/A and are never individually required, but a matrix
-    left entirely N/A is treated as unanswered.
+    Every Blast Radius cell must be scored 1-5; the count is reported rather than
+    the cell names, since a matrix has up to 35 of them.
     """
     problems: list[str] = []
     impact = answers.get("impact", {}).get(server.key, {})
@@ -185,9 +177,12 @@ def missing_required(config: SurveyConfig, server: Server, answers: dict[str, An
         problems.append("Asset Sensitivity: " + ", ".join(unrated_assets))
 
     blast = answers.get("blast", {}).get(server.key, {})
-    scored = [value for value in blast.values() if value not in (None, "", NOT_APPLICABLE)]
-    if not scored:
-        problems.append("Blast Radius: every cell is N/A — score at least one tool/asset pair")
+    unrated_cells = [cell for cell in server.blast_cells if blast.get(cell) in (None, "")]
+    if unrated_cells:
+        total = len(server.blast_cells)
+        problems.append(
+            f"Blast Radius: {len(unrated_cells)} of {total} tool/asset cells are not yet rated"
+        )
     return problems
 
 
