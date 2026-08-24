@@ -33,6 +33,7 @@ def minimal(**overrides) -> dict:
                 "blast": {
                     "tools": ["get-event"],
                     "assets": [{"name": "executive", "desc": "d"}],
+                    "live": ["executive|get-event"],
                 },
             }
         ],
@@ -76,6 +77,7 @@ class TestValidation:
         # faithfully matters more than enforcing a subset the source does not have.
         raw = minimal()
         raw["servers"][0]["blast"]["assets"] = [{"name": "ghost-asset", "desc": "d"}]
+        raw["servers"][0]["blast"]["live"] = ["ghost-asset|get-event"]
         config = load_config_from_dict(raw)
         warnings = lint(config)
         assert any("ghost-asset" in w and "never rated for Asset Sensitivity" in w for w in warnings)
@@ -113,7 +115,7 @@ class TestShippedConfig:
             for s in config.servers
         }
         assert shapes == {
-            "calendar": (7, 6, 5, 7),
+            "calendar": (7, 6, 5, 6),  # get-current-time acts on nothing, so it is not in the matrix
             "github": (7, 6, 5, 7),
             "slack": (7, 6, 5, 7),
             "filesystem": (7, 6, 5, 7),
@@ -124,6 +126,23 @@ class TestShippedConfig:
         text = (REPO_ROOT / "survey_config.json").read_text(encoding="utf-8").lower()
         for forbidden in ("researcher", "expected level", "five_level_v2", "do not send"):
             assert forbidden not in text
+
+    def test_live_cells_are_a_strict_subset_of_the_matrix(self, config):
+        for server in config.servers:
+            assert server.blast_live
+            assert set(server.live_blast_cells) <= set(server.blast_cells)
+            assert len(server.live_blast_cells) < len(server.blast_cells)
+
+    def test_dead_pairs_are_marked_not_live(self, config):
+        calendar = next(s for s in config.servers if s.key == "calendar")
+        assert calendar.is_live("executive", "get-event")
+        assert not calendar.is_live("free-busy-availability", "delete-event")
+
+    def test_rejects_a_live_cell_outside_the_matrix(self):
+        raw = minimal()
+        raw["servers"][0]["blast"]["live"] = ["ghost|get-event"]
+        with pytest.raises(ConfigError, match="not in the matrix"):
+            load_config_from_dict(raw)
 
     def test_every_item_has_a_description(self, config):
         for server in config.servers:

@@ -102,6 +102,33 @@ FORM_CSS = """
       letter-spacing: .4px;
       padding-bottom: 4px;
   }
+  /* Spread the 1-5 radio options evenly so they line up under the numbered header. */
+  div[role="radiogroup"] { display: flex !important; width: 100%; gap: 0 !important; }
+  div[role="radiogroup"] > label {
+      flex: 1 1 0 !important;
+      justify-content: center !important;
+      margin: 0 !important;
+      min-width: 0;
+  }
+  /* The header row already numbers the columns, so hide the per-option text. */
+  div[role="radiogroup"] > label > div:last-child { display: none !important; }
+  .scale-head { display: flex; width: 100%; }
+  .scale-head span {
+      flex: 1 1 0;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: #5f6368;
+  }
+  .na-cell {
+      text-align: center;
+      color: #9aa0a6;
+      background: #f1f3f4;
+      border: 1px dashed #dadce0;
+      border-radius: 4px;
+      padding: 7px 0;
+      font-size: 14px;
+  }
   .stProgress > div > div > div > div { background-color: #673ab7; }
 </style>
 """
@@ -180,7 +207,7 @@ def answer_widget_keys(config: SurveyConfig) -> list[str]:
     for server in config.enabled_servers:
         keys += [impact_key(server, tool.name) for tool in server.tools]
         keys += [sensitivity_key(server, asset.name) for asset in server.assets]
-        keys += [blast_key(server, asset, tool) for asset, tool in server.blast_cells]
+        keys += [blast_key(server, asset, tool) for asset, tool in server.live_blast_cells]
     return keys
 
 
@@ -222,7 +249,7 @@ def collect_answers(config: SurveyConfig) -> dict:
         }
         answers["blast"][server.key] = {
             (asset, tool): state.get(blast_key(server, asset, tool))
-            for asset, tool in server.blast_cells
+            for asset, tool in server.live_blast_cells
         }
     return answers
 
@@ -325,7 +352,9 @@ def radio_grid(config: SurveyConfig, dimension: str, server: Server, items, key_
         heading, scale = st.columns([3, 4])
         heading.markdown(f'<div class="grid-head">{noun}</div>', unsafe_allow_html=True)
         scale.markdown(
-            '<div class="grid-head">Rating — 1 (lowest) to 5 (highest)</div>',
+            '<div class="scale-head">'
+            + "".join(f"<span>{value}</span>" for value in RATING_OPTIONS)
+            + "</div>",
             unsafe_allow_html=True,
         )
         for position, item in enumerate(items):
@@ -347,10 +376,14 @@ def radio_grid(config: SurveyConfig, dimension: str, server: Server, items, key_
 def blast_matrix(server: Server) -> None:
     """Tool x asset matrix: a row per tool, a column per virtual asset.
 
-    Cells start unset so an unanswered cell stays distinguishable from a deliberate 1.
+    Only pairs the tool actually acts on are rateable; the rest are read-only N/A.
+    Live cells start unset, so an unanswered cell stays distinguishable from a
+    deliberate 1.
     """
     st.caption(
-        "Each row is a tool, each column a virtual asset. Score every cell from 1 to 5."
+        "Each row is a tool, each column a virtual asset. Score every open cell from 1 "
+        "to 5. Cells marked N/A are pairs the tool does not act on — they are fixed and "
+        "need no answer."
     )
     with st.expander("What each virtual asset holds", expanded=False):
         for asset in server.blast_assets:
@@ -381,6 +414,9 @@ def blast_matrix(server: Server) -> None:
                     )
             for column, asset in zip(row[1:], server.blast_assets):
                 with column:
+                    if not server.is_live(asset.name, tool):
+                        st.markdown('<div class="na-cell">N/A</div>', unsafe_allow_html=True)
+                        continue
                     key = blast_key(server, asset.name, tool)
                     kwargs = {} if key in st.session_state else {"index": None}
                     st.selectbox(

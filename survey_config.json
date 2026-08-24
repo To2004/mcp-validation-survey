@@ -155,7 +155,6 @@
       ],
       "blast": {
         "tools": [
-          "get-current-time",
           "list-calendars",
           "get-freebusy",
           "get-event",
@@ -184,6 +183,24 @@
             "name": "free-busy-availability",
             "desc": "Busy blocks with no titles or attendees"
           }
+        ],
+        "live": [
+          "calendar-records|list-calendars",
+          "executive|create-event",
+          "executive|delete-event",
+          "executive|get-event",
+          "executive|get-freebusy",
+          "executive|search-events",
+          "free-busy-availability|get-freebusy",
+          "personal|create-event",
+          "personal|delete-event",
+          "personal|get-event",
+          "personal|get-freebusy",
+          "personal|search-events",
+          "recruiting|create-event",
+          "recruiting|delete-event",
+          "recruiting|get-event",
+          "recruiting|search-events"
         ]
       }
     },
@@ -279,6 +296,33 @@
             "name": "issues-and-comments",
             "desc": "Issue threads and their comments; internal discussion"
           }
+        ],
+        "live": [
+          "backend-api|create_or_update_file",
+          "backend-api|create_pull_request",
+          "backend-api|get_file_contents",
+          "backend-api|list_commits",
+          "backend-api|merge_pull_request",
+          "backend-api|search_code",
+          "infra-config|create_or_update_file",
+          "infra-config|create_pull_request",
+          "infra-config|get_file_contents",
+          "infra-config|list_commits",
+          "infra-config|merge_pull_request",
+          "infra-config|search_code",
+          "issues-and-comments|list_issues",
+          "ml-research|create_or_update_file",
+          "ml-research|create_pull_request",
+          "ml-research|get_file_contents",
+          "ml-research|list_commits",
+          "ml-research|search_code",
+          "payments-service|create_or_update_file",
+          "payments-service|create_pull_request",
+          "payments-service|get_file_contents",
+          "payments-service|list_commits",
+          "payments-service|list_issues",
+          "payments-service|merge_pull_request",
+          "payments-service|search_code"
         ]
       }
     },
@@ -374,6 +418,20 @@
             "name": "read-markers",
             "desc": "Per-conversation seen/unseen cursors; says nothing about content"
           }
+        ],
+        "live": [
+          "channel-directory|channels_list",
+          "channel-directory|conversations_search_messages",
+          "channel-directory|conversations_unreads",
+          "exec-private|conversations_add_message",
+          "exec-private|conversations_history",
+          "exec-private|conversations_search_messages",
+          "hr-internal|conversations_add_message",
+          "hr-internal|conversations_history",
+          "hr-internal|conversations_search_messages",
+          "read-markers|conversations_unreads",
+          "usergroup-membership|usergroups_create",
+          "usergroup-membership|usergroups_users_update"
         ]
       }
     },
@@ -469,6 +527,27 @@
             "name": "mount-directory",
             "desc": "The list of roots this server is permitted to serve"
           }
+        ],
+        "live": [
+          "mount-directory|list_allowed_directories",
+          "onboarding-material|directory_tree",
+          "onboarding-material|edit_file",
+          "onboarding-material|list_directory",
+          "onboarding-material|read_file",
+          "onboarding-material|read_multiple_files",
+          "onboarding-material|write_file",
+          "payroll-records|edit_file",
+          "payroll-records|read_file",
+          "payroll-records|read_multiple_files",
+          "payroll-records|write_file",
+          "product-source|edit_file",
+          "product-source|read_file",
+          "product-source|read_multiple_files",
+          "product-source|write_file",
+          "security-keys|edit_file",
+          "security-keys|read_file",
+          "security-keys|read_multiple_files",
+          "security-keys|write_file"
         ]
       }
     },
@@ -554,6 +633,25 @@
             "name": "table-catalog",
             "desc": "The list of table names. No cell values, but the names map the integrations"
           }
+        ],
+        "live": [
+          "api_keys|describe_table",
+          "api_keys|insert_row",
+          "api_keys|read_query",
+          "api_keys|write_query",
+          "database-records|describe_table",
+          "database-records|read_query",
+          "database-records|write_query",
+          "employees|describe_table",
+          "employees|insert_row",
+          "employees|read_query",
+          "employees|write_query",
+          "grants|describe_table",
+          "grants|insert_row",
+          "grants|read_query",
+          "grants|write_query",
+          "table-catalog|list_tables",
+          "table-catalog|read_query"
         ]
       }
     }

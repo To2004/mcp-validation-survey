@@ -7,9 +7,9 @@ Two shapes are produced from the same submission:
 * **long** — one record per rating, produced on demand for the researcher. This is
   the shape that joins cleanly against the scanner's own per-tool/per-asset output.
 
-Every rating is 1-5. The Blast Radius matrix has no N/A option: each tool/asset cell
-carries a score, so a pair the tool does not really reach is recorded as 1 rather than
-being marked unscored.
+Every rating a participant makes is 1-5. Blast Radius cells the scanner marks as
+non-existent are fixed at N/A and shown read-only, so participants score only the
+tool/asset pairs that actually exist.
 """
 
 from __future__ import annotations
@@ -17,6 +17,8 @@ from __future__ import annotations
 from typing import Any, Iterable, Sequence
 
 from survey.config import COLUMN_SEPARATOR, Server, SurveyConfig
+
+NOT_APPLICABLE = "N/A"
 
 METADATA_COLUMNS = (
     "submission_id",
@@ -100,6 +102,9 @@ def response_to_row(
                 sensitivity.get(server.key, {}).get(asset.name)
             )
         for asset, tool in server.blast_cells:
+            if not server.is_live(asset, tool):
+                row[blast_column(server.key, asset, tool)] = NOT_APPLICABLE
+                continue
             row[blast_column(server.key, asset, tool)] = _rating(
                 blast.get(server.key, {}).get((asset, tool))
             )
@@ -160,8 +165,8 @@ def long_format_rows(
 def missing_required(config: SurveyConfig, server: Server, answers: dict[str, Any]) -> list[str]:
     """Human-readable list of what is still unanswered in one server section.
 
-    Every Blast Radius cell must be scored 1-5; the count is reported rather than
-    the cell names, since a matrix has up to 35 of them.
+    Only live Blast Radius cells are required; read-only N/A cells are not. The count
+    is reported rather than the cell names, since a matrix has up to 35 of them.
     """
     problems: list[str] = []
     impact = answers.get("impact", {}).get(server.key, {})
@@ -177,9 +182,9 @@ def missing_required(config: SurveyConfig, server: Server, answers: dict[str, An
         problems.append("Asset Sensitivity: " + ", ".join(unrated_assets))
 
     blast = answers.get("blast", {}).get(server.key, {})
-    unrated_cells = [cell for cell in server.blast_cells if blast.get(cell) in (None, "")]
+    unrated_cells = [cell for cell in server.live_blast_cells if blast.get(cell) in (None, "")]
     if unrated_cells:
-        total = len(server.blast_cells)
+        total = len(server.live_blast_cells)
         problems.append(
             f"Blast Radius: {len(unrated_cells)} of {total} tool/asset cells are not yet rated"
         )

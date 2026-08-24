@@ -66,8 +66,10 @@ sens__<server>__<asset>             e.g. sens__calendar__executive
 blast__<server>__<asset>__<tool>    e.g. blast__calendar__executive__get-event
 ```
 
-Every rating, including every Blast Radius cell, is `1`–`5`. The matrix has no N/A
-option: a participant scores all of a server's tool × asset pairs before moving on.
+Every rating a participant makes is `1`–`5`. The Blast Radius matrix is pre-restricted
+to the tool × asset pairs the scanner says exist: dead pairs render read-only as `N/A`,
+and a tool that acts on no asset is dropped from the matrix. Participants score every
+live cell before moving on.
 
 ## Running only some servers
 

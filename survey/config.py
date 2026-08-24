@@ -56,11 +56,24 @@ class Server:
     assets: tuple[Item, ...]
     blast_tools: tuple[str, ...]
     blast_assets: tuple[Item, ...]
+    blast_live: frozenset[tuple[str, str]]
 
     @property
     def blast_cells(self) -> list[tuple[str, str]]:
         """Every (asset, tool) pair in this server's Blast Radius matrix."""
         return [(asset.name, tool) for asset in self.blast_assets for tool in self.blast_tools]
+
+    def is_live(self, asset: str, tool: str) -> bool:
+        """Whether this tool actually acts on this asset.
+
+        Dead pairs are fixed at N/A and shown read-only, so participants rate only
+        the pairs that exist on the asset register.
+        """
+        return (asset, tool) in self.blast_live
+
+    @property
+    def live_blast_cells(self) -> list[tuple[str, str]]:
+        return [cell for cell in self.blast_cells if cell in self.blast_live]
 
 
 @dataclass(frozen=True)
@@ -135,6 +148,16 @@ def _parse_server(raw: dict[str, Any]) -> Server:
         if name not in tool_names:
             raise ConfigError(f"{where}: blast tool {name!r} is not in the tool list")
 
+    cells = {(asset.name, tool) for asset in blast_assets for tool in blast_tools}
+    blast_live = set()
+    for entry in blast.get("live", []):
+        asset, _, tool = str(entry).partition("|")
+        if (asset, tool) not in cells:
+            raise ConfigError(
+                f"{where}: live blast cell {entry!r} is not in the matrix"
+            )
+        blast_live.add((asset, tool))
+
     # Blast assets are deliberately NOT required to be a subset of the sensitivity
     # assets: the v9 form rates a different asset set in each step. That mismatch is
     # reported by `lint()` rather than rejected here, so the app renders the form as
@@ -149,6 +172,7 @@ def _parse_server(raw: dict[str, Any]) -> Server:
         assets=assets,
         blast_tools=blast_tools,
         blast_assets=blast_assets,
+        blast_live=frozenset(blast_live),
     )
 
 

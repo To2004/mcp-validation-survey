@@ -39,10 +39,14 @@ name that would break this.
 | Asset Sensitivity | 1–5 (Public to Critical) |
 | Blast Radius | 1–5 (Negligible to Systemic) |
 
-The Blast Radius matrix has no N/A option: every tool/asset cell is scored 1–5, and a
-pair a tool barely reaches is a 1. The scanner still emits N/A for pairs that do not
-exist on the asset register, so decide how to handle those cells when comparing (drop
-them, or treat scanner-N/A as 1) and say which.
+Blast Radius cells can also hold `N/A`, but participants never choose it. The matrix is
+pre-restricted to the pairs the scanner says exist: a tool that acts on no asset has no
+row at all, and a dead tool/asset pair renders read-only and is written as `N/A`.
+Participants only score live pairs, all of which are required.
+
+`N/A` in the export therefore means "the scanner says this pair does not exist", not a
+participant judgement — so it carries no agreement signal. Exclude those cells when
+comparing human and scanner blast scores.
 
 Every rating in the survey is required, so blank rating cells should not occur. A
 blank can only mean the row was written by an older version of the app.

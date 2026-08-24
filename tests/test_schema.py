@@ -4,6 +4,7 @@ import pytest
 
 from survey.config import SurveyConfig, load_config_from_dict
 from survey.schema import (
+    NOT_APPLICABLE,
     blast_column,
     csv_columns,
     impact_column,
@@ -44,6 +45,7 @@ def config() -> SurveyConfig:
                     "blast": {
                         "tools": ["get-event", "delete-event"],
                         "assets": [{"name": "executive", "desc": "d"}],
+                        "live": ["executive|get-event", "executive|delete-event"],
                     },
                 },
                 {
@@ -58,6 +60,44 @@ def config() -> SurveyConfig:
                         "assets": [{"name": "internal-docs", "desc": "d"}],
                     },
                 },
+            ],
+        }
+    )
+
+
+def _config_with_one_dead_cell() -> SurveyConfig:
+    """Same shape as `config`, but delete-event does not act on executive."""
+    return load_config_from_dict(
+        {
+            "title": "T",
+            "subtitle": "S",
+            "intro": "I",
+            "consent": "C",
+            "scales": {
+                dim: [{"value": n, "label": f"L{n}", "meaning": "m"} for n in range(1, 6)]
+                for dim in ("impact", "sensitivity", "blast")
+            },
+            "step_prompts": {"impact": "a", "sensitivity": "b", "blast": "c"},
+            "servers": [
+                {
+                    "key": "calendar",
+                    "title": "Google Calendar",
+                    "enabled": True,
+                    "scenario": "sc",
+                    "tools": [
+                        {"name": "get-event", "desc": "d"},
+                        {"name": "delete-event", "desc": "d"},
+                    ],
+                    "assets": [
+                        {"name": "executive", "desc": "d"},
+                        {"name": "personal", "desc": "d"},
+                    ],
+                    "blast": {
+                        "tools": ["get-event", "delete-event"],
+                        "assets": [{"name": "executive", "desc": "d"}],
+                        "live": ["executive|get-event"],
+                    },
+                }
             ],
         }
     )
@@ -124,6 +164,13 @@ class TestResponseToRow:
         answers["blast"]["calendar"].pop(("executive", "delete-event"))
         row = response_to_row(config, answers, submission_id="s1", submitted_at="t")
         assert row["blast__calendar__executive__delete-event"] == ""
+
+    def test_dead_pair_is_written_as_na_regardless_of_input(self, config, answers):
+        # A pair the tool does not act on is not offered to the participant at all.
+        answers["blast"]["calendar"][("executive", "delete-event")] = 4
+        dead = _config_with_one_dead_cell()
+        row = response_to_row(dead, answers, submission_id="s1", submitted_at="t")
+        assert row["blast__calendar__executive__delete-event"] == NOT_APPLICABLE
 
     def test_blast_values_are_written_as_integers(self, config, answers):
         answers["blast"]["calendar"][("executive", "get-event")] = "5"

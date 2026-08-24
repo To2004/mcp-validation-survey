@@ -35,7 +35,8 @@ shape. If you intentionally changed the number of tools or assets, update
       "assets": [{ "name": "...", "desc": "..." }],
       "blast":  {
         "tools":  ["..."],
-        "assets": [{ "name": "...", "desc": "..." }]
+        "assets": [{ "name": "...", "desc": "..." }],
+        "live":   ["<asset>|<tool>"]
       }
     }
   ]
@@ -46,7 +47,10 @@ shape. If you intentionally changed the number of tools or assets, update
 * `enabled: false` removes the server from the survey and from the CSV.
 * `scenario` is the organisational context shown above every step.
 * `tools` drives Step 1, `assets` drives Step 2, and `blast` drives the Step 3 matrix
-  (`blast.tools` are the columns, `blast.assets` the rows).
+  (`blast.tools` are the rows, `blast.assets` the columns).
+* `blast.live` lists the pairs the tool actually acts on, taken from the scanner's own
+  `blast_radius` map (a non-null entry means live). Every other cell renders read-only
+  as N/A. A tool with no live pair should be left out of `blast.tools` entirely.
 
 Each scale must have exactly the levels 1–5, in order. Blast matrix tools must all
 appear in that server's `tools` list. Names must not contain `__`, which separates the
