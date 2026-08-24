@@ -1,6 +1,13 @@
 # Data format
 
-What the exported CSVs contain and how to read them.
+What is stored and how to read it.
+
+## Where the data lives
+
+Completed submissions go to Supabase in two tables: `responses` (one row per
+participant, with every value also kept in an `answers` JSONB column) and `ratings`
+(one row per individual rating). The researcher panel exports the same data as the
+two CSV shapes below. Partial or abandoned sessions are never stored.
 
 ## Wide export — one row per participant
 

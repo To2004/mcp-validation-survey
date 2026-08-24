@@ -14,8 +14,9 @@ an account.
 * Covers all five MCP servers from the source form (Google Calendar, GitHub, Slack,
   Filesystem, SQL Database), each with the three scoring steps: **Tool Impact**,
   **Asset Sensitivity** and **Blast Radius**.
-* Writes one row per participant to CSV, plus a long-format export (one row per
-  rating) that joins cleanly against the scanner's own output.
+* Stores every **completed** submission in Supabase (Postgres) — one row per
+  participant plus one row per individual rating — and exports both wide and
+  long-format CSV. Abandoned sessions are not stored.
 * Gives the researcher a password-gated panel to view and download everything.
 
 All survey content is generated from the source Word form into
@@ -44,14 +45,15 @@ The survey opens at <http://localhost:8501>.
 
 4. Deploy. Share the resulting `https://<name>.streamlit.app` URL with participants.
 
-**Before a real run, set up the Google Sheets backend** (see
-[docs/deployment.md](docs/deployment.md)). Without it responses go to a file inside
-the container, which Streamlit Cloud wipes on every restart or redeploy.
+**Before a real run, set up Supabase** (see [docs/deployment.md](docs/deployment.md)) and
+add `supabase_url` / `supabase_key` to the secrets. Without them responses go to a file
+inside the container, which Streamlit Cloud wipes on every restart or redeploy.
 
 ## Getting the results
 
-Open your app URL with `?admin=<admin_token>` appended. The researcher panel shows
-the response count, a table of everything collected, and two download buttons:
+Query Supabase directly, or open your app URL with `?admin=<admin_token>` appended.
+The researcher panel shows the response count, a table of everything collected, and
+two download buttons:
 
 | Export | Shape | Use it for |
 | --- | --- | --- |
@@ -80,7 +82,7 @@ survey and from the CSV. To pilot with just Google Calendar, disable the other f
 
 | Document | Contents |
 | --- | --- |
-| [docs/deployment.md](docs/deployment.md) | Hosting, secrets, Google Sheets backend |
+| [docs/deployment.md](docs/deployment.md) | Hosting, secrets, Supabase setup and SQL |
 | [docs/data-format.md](docs/data-format.md) | CSV columns, value meanings, analysis notes |
 | [docs/editing-the-survey.md](docs/editing-the-survey.md) | Changing questions, regenerating the config |
 | [docs/known-issues.md](docs/known-issues.md) | Discrepancies found in the source form |
