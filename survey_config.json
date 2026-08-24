@@ -1,0 +1,561 @@
+{
+  "title": "MCP Static Scanner Validation Survey",
+  "subtitle": "Human Evaluation of MCP Tool and Resource Risk",
+  "intro": "This study evaluates a static risk-scanning approach for Model Context Protocol (MCP) tools — the layer that lets an AI agent use services such as Google Calendar, GitHub and Slack.\n\nYou will rate the MCP servers below with respect to three MCP security aspects: Tool Impact, Asset Sensitivity and Blast Radius. Each section says what to ignore, so please keep them apart and judge only from the information given.",
+  "consent": "I understand the purpose of the study and agree that my anonymized responses may be used for research and evaluation of the proposed risk-scoring method.",
+  "scales": {
+    "impact": [
+      {
+        "value": 1,
+        "label": "Liveness",
+        "meaning": "The system only says “I am here.” Nothing about the data is touched or revealed (ping, health, version, whoami)."
+      },
+      {
+        "value": 2,
+        "label": "Metadata",
+        "meaning": "The shape of the data, never its substance: names, ids, counts, sizes, timestamps, permissions, a listing — or a change to labels and read/unread state only."
+      },
+      {
+        "value": 3,
+        "label": "Read content",
+        "meaning": "The substance is disclosed and nothing changes: actual bodies and values are returned (read, get, fetch, export). Afterwards the system is exactly as before."
+      },
+      {
+        "value": 4,
+        "label": "Recoverable write",
+        "meaning": "State changes and the system can undo it: something is created, edited in part, moved, or posted where it can still be deleted. Permission and membership changes belong here too."
+      },
+      {
+        "value": 5,
+        "label": "Irreversible",
+        "meaning": "No path back from inside the system: content destroyed or fully overwritten, code executed, money moved, or a message sent outside (email, webhook, public post) where it cannot be recalled."
+      }
+    ],
+    "sensitivity": [
+      {
+        "value": 1,
+        "label": "Public",
+        "meaning": "Already published or disposable. Nothing left to lose but uptime."
+      },
+      {
+        "value": 2,
+        "label": "Routine",
+        "meaning": "Low-value internal material — onboarding guides, templates, org charts. Barely worth stealing."
+      },
+      {
+        "value": 3,
+        "label": "Internal",
+        "meaning": "Meant to stay in-house. A leak is awkward and briefly useful to others, but not lasting damage — project docs, schemas, ordinary team schedules."
+      },
+      {
+        "value": 4,
+        "label": "Restricted",
+        "meaning": "A leak causes serious, lasting harm to customers, staff or the organization, but is not instantly usable the way a live credential is — customer and production data, payroll and HR, proprietary source, audit logs."
+      },
+      {
+        "value": 5,
+        "label": "Critical",
+        "meaning": "Exposure alone is an emergency: exploitable or legally reportable the moment it leaks — live credentials and keys, regulated records such as patient or card data, money-moving material."
+      }
+    ],
+    "blast": [
+      {
+        "value": 1,
+        "label": "Negligible",
+        "meaning": "One item among many, one person at most. The asset as a whole is untouched."
+      },
+      {
+        "value": 2,
+        "label": "Minor",
+        "meaning": "A few items or one small bounded scope. Real but local, and easy to restore."
+      },
+      {
+        "value": 3,
+        "label": "Major",
+        "meaning": "Most of the asset, or several whole scopes in one call. Serious, but still partial."
+      },
+      {
+        "value": 4,
+        "label": "Total but contained",
+        "meaning": "Essentially everything the asset holds — but the consequences stop at its boundary. Full coverage of an ordinary asset is 4, never 5."
+      },
+      {
+        "value": 5,
+        "label": "Systemic",
+        "meaning": "The consequences escape the asset. Award 5 only through one of the three routes listed below."
+      }
+    ]
+  },
+  "step_prompts": {
+    "impact": "Rate the tool impact of MCP tools. Think about what the tool may perform. A short description of every tool is given beneath its name. Judge each tool on its own, not against the others.",
+    "sensitivity": "Rate the asset itself, whichever tool reaches it. A short description of every asset is given beneath its name. Judge each asset on its own, not against the others. Levels may repeat. Rate what the asset normally holds, not the worst it could ever hold.",
+    "blast": "Rate the potential effect of a tool on an asset at scale. Think about “How far does one call reach?” Enter 1–5 where the tool acts on that asset, and N/A where it does not. A non-touching pair is not a low score — it is unscored."
+  },
+  "servers": [
+    {
+      "key": "calendar",
+      "title": "Google Calendar",
+      "enabled": true,
+      "scenario": "CBG's workplace-services team runs the agent against the real 13-tool Google Calendar surface. The central fact for this organization is that event metadata is itself sensitive: attendee lists and titles disclose unannounced deals, candidates and departures without anyone opening an event body. Knowing which calendars exist is not — the container list is routine.",
+      "tools": [
+        {
+          "name": "get-current-time",
+          "desc": "Returns the current time in a given time zone. Reaches no calendar and no event."
+        },
+        {
+          "name": "list-calendars",
+          "desc": "Returns the calendars the account can see — names, ids and basic attributes. No events."
+        },
+        {
+          "name": "get-freebusy",
+          "desc": "Returns busy and free blocks for the calendars named. No titles, no attendees."
+        },
+        {
+          "name": "get-event",
+          "desc": "Returns one event in full: title, description, location and the attendee list."
+        },
+        {
+          "name": "search-events",
+          "desc": "Returns the events matching a query, with their titles and attendees."
+        },
+        {
+          "name": "create-event",
+          "desc": "Creates a new event, optionally inviting attendees by email."
+        },
+        {
+          "name": "delete-event",
+          "desc": "Permanently removes an existing event from the calendar."
+        }
+      ],
+      "assets": [
+        {
+          "name": "holidays",
+          "desc": "The published org holiday calendar"
+        },
+        {
+          "name": "calendar-directory",
+          "desc": "The list of calendars, no events"
+        },
+        {
+          "name": "team",
+          "desc": "Ordinary team scheduling calendar"
+        },
+        {
+          "name": "personal",
+          "desc": "An individual employee's own schedule"
+        },
+        {
+          "name": "executive",
+          "desc": "Officers' calendars; titles and attendee lists disclose deals and departures without opening a body"
+        },
+        {
+          "name": "connected-account-config",
+          "desc": "Which accounts are linked and with what scope; the reach of every other tool"
+        }
+      ],
+      "blast": {
+        "tools": [
+          "get-current-time",
+          "list-calendars",
+          "get-freebusy",
+          "get-event",
+          "search-events",
+          "create-event",
+          "delete-event"
+        ],
+        "assets": [
+          {
+            "name": "executive",
+            "desc": "Officers' calendars; titles and attendee lists disclose deals and departures without opening a body"
+          },
+          {
+            "name": "recruiting",
+            "desc": "Interview scheduling; attendee names are candidate identities"
+          },
+          {
+            "name": "personal",
+            "desc": "An individual employee's own schedule"
+          },
+          {
+            "name": "calendar-records",
+            "desc": "Calendar-level attributes a read returns"
+          },
+          {
+            "name": "free-busy-availability",
+            "desc": "Busy blocks with no titles or attendees"
+          }
+        ]
+      }
+    },
+    {
+      "key": "github",
+      "title": "GitHub",
+      "enabled": true,
+      "scenario": "CBG's engineering organization runs the agent against the vendor's 26-tool GitHub catalog. CBG does not disclose its repository inventory to integrators: the list of private repository names alone maps the product estate and the production topology. The assets below therefore name classes of repository and the mutable states this surface can reach, not the repositories themselves.",
+      "tools": [
+        {
+          "name": "list_commits",
+          "desc": "Returns commit messages and metadata for a repository. No file contents."
+        },
+        {
+          "name": "list_issues",
+          "desc": "Returns issue titles and metadata. No issue bodies."
+        },
+        {
+          "name": "get_file_contents",
+          "desc": "Returns the contents of one file, named by exact path."
+        },
+        {
+          "name": "search_code",
+          "desc": "Returns matching lines of code from across the repositories in scope."
+        },
+        {
+          "name": "create_or_update_file",
+          "desc": "Writes one file, creating it or replacing its contents."
+        },
+        {
+          "name": "create_pull_request",
+          "desc": "Opens a proposed change for review. Nothing is merged yet."
+        },
+        {
+          "name": "merge_pull_request",
+          "desc": "Merges an approved pull request into its target branch."
+        }
+      ],
+      "assets": [
+        {
+          "name": "public-website",
+          "desc": "The public marketing site repository; already published"
+        },
+        {
+          "name": "repository-catalog",
+          "desc": "The list of repository names, descriptions and visibility; no code"
+        },
+        {
+          "name": "internal-docs",
+          "desc": "Internal engineering documentation and runbooks"
+        },
+        {
+          "name": "ml-research",
+          "desc": "Unpublished research, models and dataset pointers"
+        },
+        {
+          "name": "repository-contents",
+          "desc": "What a file read or write reaches: code bodies across every repo in scope"
+        },
+        {
+          "name": "infra-config",
+          "desc": "Terraform and deploy configuration for the production estate; a merge reconfigures production"
+        }
+      ],
+      "blast": {
+        "tools": [
+          "list_commits",
+          "list_issues",
+          "get_file_contents",
+          "search_code",
+          "create_or_update_file",
+          "create_pull_request",
+          "merge_pull_request"
+        ],
+        "assets": [
+          {
+            "name": "infra-config",
+            "desc": "Terraform and deploy configuration for the production estate; a merge reconfigures production"
+          },
+          {
+            "name": "payments-service",
+            "desc": "Money-handling service code; a merge reaches live payment processing"
+          },
+          {
+            "name": "backend-api",
+            "desc": "Core service source; a merge reaches production behavior"
+          },
+          {
+            "name": "ml-research",
+            "desc": "Unpublished research, models and dataset pointers"
+          },
+          {
+            "name": "issues-and-comments",
+            "desc": "Issue threads and their comments; internal discussion"
+          }
+        ]
+      }
+    },
+    {
+      "key": "slack",
+      "title": "Slack",
+      "enabled": true,
+      "scenario": "CBG's Slack workspace runs on the real 16-tool API surface. CBG does not publish a channel inventory or classification list to integrators: private channel names themselves reveal organizational structure — who is in an incident, what HR is discussing. Note what this surface includes beyond messaging: user-group administration and channel join/leave are access-control operations wearing messaging clothes.",
+      "tools": [
+        {
+          "name": "channels_list",
+          "desc": "Returns the channels in the workspace — names and topics. No messages."
+        },
+        {
+          "name": "conversations_unreads",
+          "desc": "Returns unread counts and read markers across conversations. No message bodies."
+        },
+        {
+          "name": "conversations_history",
+          "desc": "Returns the recent messages in one channel."
+        },
+        {
+          "name": "conversations_search_messages",
+          "desc": "Returns matching messages from across the workspace."
+        },
+        {
+          "name": "conversations_add_message",
+          "desc": "Posts a message into a channel."
+        },
+        {
+          "name": "usergroups_create",
+          "desc": "Creates a new user group."
+        },
+        {
+          "name": "usergroups_users_update",
+          "desc": "Replaces the membership of a user group — the access list for private channels."
+        }
+      ],
+      "assets": [
+        {
+          "name": "announcements",
+          "desc": "Broadcast channel, already seen by everyone; only spoofing matters"
+        },
+        {
+          "name": "channel-directory",
+          "desc": "The list of channels, their names and topics; no messages"
+        },
+        {
+          "name": "engineering",
+          "desc": "Ordinary engineering traffic"
+        },
+        {
+          "name": "hr-internal",
+          "desc": "HR private channel — personnel matters and salary data"
+        },
+        {
+          "name": "incident-response",
+          "desc": "Live incident channel; credentials are routinely pasted mid-incident"
+        },
+        {
+          "name": "usergroup-membership",
+          "desc": "Who belongs to a user group — the access-control list for the private channels"
+        }
+      ],
+      "blast": {
+        "tools": [
+          "channels_list",
+          "conversations_unreads",
+          "conversations_history",
+          "conversations_search_messages",
+          "conversations_add_message",
+          "usergroups_create",
+          "usergroups_users_update"
+        ],
+        "assets": [
+          {
+            "name": "exec-private",
+            "desc": "Officers' private channel — unreleased strategy and compensation discussion"
+          },
+          {
+            "name": "hr-internal",
+            "desc": "HR private channel — personnel matters and salary data"
+          },
+          {
+            "name": "usergroup-membership",
+            "desc": "Who belongs to a user group — the access-control list for the private channels"
+          },
+          {
+            "name": "channel-directory",
+            "desc": "The list of channels, their names and topics; no messages"
+          },
+          {
+            "name": "read-markers",
+            "desc": "Per-conversation seen/unseen cursors; says nothing about content"
+          }
+        ]
+      }
+    },
+    {
+      "key": "filesystem",
+      "title": "Filesystem",
+      "enabled": true,
+      "scenario": "CBG's corporate file share is served to the agent through the real 14-tool filesystem server. Engineering material, payroll, security key material and product source sit in one tree, and CBG does not publish the file listing: the layout maps which teams hold what, and the security scope's very existence is a target. Classify by data type, not by where a path happens to sit.",
+      "tools": [
+        {
+          "name": "list_allowed_directories",
+          "desc": "Returns the roots this server is permitted to serve. No file names, no contents."
+        },
+        {
+          "name": "list_directory",
+          "desc": "Lists the entries of one directory, files and directories distinguished. No contents."
+        },
+        {
+          "name": "directory_tree",
+          "desc": "Returns the whole recursive tree of names and paths beneath a directory. No contents."
+        },
+        {
+          "name": "read_file",
+          "desc": "Returns the complete text of one file, named by exact path."
+        },
+        {
+          "name": "read_multiple_files",
+          "desc": "Returns the complete contents of several named files in one call."
+        },
+        {
+          "name": "edit_file",
+          "desc": "Replaces exact line sequences inside an existing file and leaves the rest untouched."
+        },
+        {
+          "name": "write_file",
+          "desc": "Creates a file, or completely overwrites an existing one with new content."
+        }
+      ],
+      "assets": [
+        {
+          "name": "public-overview",
+          "desc": "Published overview and README material"
+        },
+        {
+          "name": "mount-directory",
+          "desc": "The list of roots this server is permitted to serve"
+        },
+        {
+          "name": "onboarding-material",
+          "desc": "Org charts and onboarding documents; near-public internally"
+        },
+        {
+          "name": "project-material",
+          "desc": "Schemas, defect lists and working project documents"
+        },
+        {
+          "name": "payroll-records",
+          "desc": "Compensation records — one row per employee, the whole staff"
+        },
+        {
+          "name": "security-keys",
+          "desc": "Private key material and certificates, complete and usable alone"
+        }
+      ],
+      "blast": {
+        "tools": [
+          "list_allowed_directories",
+          "list_directory",
+          "directory_tree",
+          "read_file",
+          "read_multiple_files",
+          "edit_file",
+          "write_file"
+        ],
+        "assets": [
+          {
+            "name": "security-keys",
+            "desc": "Private key material and certificates, complete and usable alone"
+          },
+          {
+            "name": "payroll-records",
+            "desc": "Compensation records — one row per employee, the whole staff"
+          },
+          {
+            "name": "product-source",
+            "desc": "Product logic that ships to production"
+          },
+          {
+            "name": "onboarding-material",
+            "desc": "Org charts and onboarding documents; near-public internally"
+          },
+          {
+            "name": "mount-directory",
+            "desc": "The list of roots this server is permitted to serve"
+          }
+        ]
+      }
+    },
+    {
+      "key": "sqlite",
+      "title": "SQL Database",
+      "enabled": true,
+      "scenario": "CBG's research-operations database is a single SQLite store on a 5-tool server, holding the project register, experiment records, dataset provenance, staff records and the API credentials the research pipeline uses to reach other services. CBG does not publish the schema to integrators: the table names alone map which systems we integrate with and where the credentials live. Classify by what a table characteristically holds.",
+      "tools": [
+        {
+          "name": "list_tables",
+          "desc": "Returns the names of every table in the database. No columns, no rows."
+        },
+        {
+          "name": "describe_table",
+          "desc": "Returns the column names and types of one named table. No cell values."
+        },
+        {
+          "name": "read_query",
+          "desc": "Returns the rows matching a read-only SELECT the caller writes, up to 100. Nothing changes."
+        },
+        {
+          "name": "insert_row",
+          "desc": "Inserts one new row into a named table."
+        },
+        {
+          "name": "write_query",
+          "desc": "Runs an INSERT, UPDATE or DELETE the caller writes. DDL is blocked; there is no rollback."
+        }
+      ],
+      "assets": [
+        {
+          "name": "publications",
+          "desc": "Published papers and citations; only unreleased pre-print status is sensitive"
+        },
+        {
+          "name": "table-metadata",
+          "desc": "Column names and types for one table; schema only"
+        },
+        {
+          "name": "projects",
+          "desc": "The internal project register"
+        },
+        {
+          "name": "datasets",
+          "desc": "Pre-publication research data and its provenance"
+        },
+        {
+          "name": "employees",
+          "desc": "Staff records: salary, contact details, one row per person"
+        },
+        {
+          "name": "api_keys",
+          "desc": "Stored service credentials — one row is independently usable against another system"
+        }
+      ],
+      "blast": {
+        "tools": [
+          "list_tables",
+          "describe_table",
+          "read_query",
+          "insert_row",
+          "write_query"
+        ],
+        "assets": [
+          {
+            "name": "api_keys",
+            "desc": "Stored service credentials — one row is independently usable against another system"
+          },
+          {
+            "name": "employees",
+            "desc": "Staff records: salary, contact details, one row per person"
+          },
+          {
+            "name": "grants",
+            "desc": "Funding terms and award amounts; a tampered row misstates a sponsor commitment"
+          },
+          {
+            "name": "database-records",
+            "desc": "What an unrestricted query returns: the caller names the table, so this reaches whatever the credential can see"
+          },
+          {
+            "name": "table-catalog",
+            "desc": "The list of table names. No cell values, but the names map the integrations"
+          }
+        ]
+      }
+    }
+  ]
+}
