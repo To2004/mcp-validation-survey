@@ -8,10 +8,15 @@ Each rating step is a single table: a row per tool or asset, five columns for th
 1–5 scale. Row label and description sit on the left, the circles on the right,
 aligned under a numbered header.
 
-The alignment is done with CSS grid rather than by spacing radio buttons: the
-header and every row use `grid-template-columns: repeat(5, 1fr)` across the same
-column width, so the circles land under their numbers at any window size. Each
-option's own text label is hidden, because the header already names the column.
+Alignment is structural, not cosmetic: the header and every row are built from the
+same `st.columns([label, 1, 1, 1, 1, 1])` spec, so each rating control sits in its
+own Streamlit column and lines up with its header by construction.
+
+An earlier version used a horizontal `st.radio` per row and tried to spread its
+options with CSS. That was fragile — the options are laid out by the widget's own
+styled-components at their natural width, and overriding it means matching internal
+DOM that can change between Streamlit releases. It repeatedly rendered the circles
+bunched at the left. Buttons in columns have no such dependency.
 
 ## Accessibility
 
@@ -19,10 +24,17 @@ Matrix questions are the classic accessibility trap — a true HTML `<table>` of
 radios is hard to navigate with a screen reader, and the usual advice is to fall
 back to a series of individual questions.
 
-This app gets both: **every row is its own radio group** with its own accessible
-label ("Tool Impact rating for get-event"), so assistive technology reads it as an
-ordinary question, while CSS arranges the groups into a grid for sighted users. No
-layout table is involved.
+No layout table is involved: the grid is made of ordinary containers, and each
+rating control is a real focusable button carrying its level name and definition as
+a tooltip (`1 — Liveness — The system only says "I am here" …`).
+
+**Trade-off, stated plainly:** these are buttons, not a native radio group, so a
+screen reader announces five buttons in a row rather than "1 of 5 selected". That is
+weaker than a real `radiogroup`. It was accepted because the radio-based version
+could not be aligned reliably, and an unreadable grid fails sighted and low-vision
+users too. If the study needs to be run with screen-reader participants, replace
+each row with a vertical `st.radio` — one question per screen — which is the
+fallback the accessibility guidance recommends anyway.
 
 Other choices from the same guidance:
 

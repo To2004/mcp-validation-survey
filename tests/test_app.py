@@ -11,7 +11,25 @@ from pathlib import Path
 import pytest
 from streamlit.testing.v1 import AppTest
 
+from survey.config import load_config
+
 APP_PATH = Path(__file__).resolve().parents[1] / "streamlit_app.py"
+CONFIG = load_config(APP_PATH.parent / "survey_config.json")
+
+
+def impact_keys(server_key: str) -> list[str]:
+    server = next(s for s in CONFIG.enabled_servers if s.key == server_key)
+    return [f"impact__{server_key}__{tool.name}" for tool in server.tools]
+
+
+def sensitivity_keys(server_key: str) -> list[str]:
+    server = next(s for s in CONFIG.enabled_servers if s.key == server_key)
+    return [f"sensitivity__{server_key}__{asset.name}" for asset in server.assets]
+
+
+def blast_keys(server_key: str) -> list[str]:
+    server = next(s for s in CONFIG.enabled_servers if s.key == server_key)
+    return [f"blast__{server_key}__{asset}__{tool}" for asset, tool in server.live_blast_cells]
 
 
 def run_app(**secrets) -> AppTest:
@@ -40,31 +58,34 @@ def page_text(app: AppTest) -> str:
     return " ".join(element.value for element in app.markdown)
 
 
-def set_page_radios(app: AppTest, prefix: str, value: int) -> AppTest:
-    """Set every radio belonging to the current page (identified by key prefix)."""
-    for radio in app.radio:
-        if radio.key and radio.key.startswith(prefix):
-            radio.set_value(value)
+def set_ratings(app: AppTest, keys, value: int) -> AppTest:
+    """Answer a whole rating page at once.
+
+    Ratings are stored under plain session-state keys (the buttons write to them),
+    so a test can seed them directly. `test_clicking_a_rating_button_records_it`
+    covers the click path itself.
+    """
+    for key in keys:
+        app.session_state[key] = value
     return app.run()
 
 
 def complete_intro(app: AppTest, participant: str = "P01") -> AppTest:
     app.text_input[0].set_value(participant)
-    app.radio(key="familiarity_llm_agents").set_value(4)
-    app.radio(key="familiarity_mcp").set_value(3)
+    app.session_state["familiarity_llm_agents"] = 4
+    app.session_state["familiarity_mcp"] = 3
     app.checkbox(key="consent").check()
     return click(app.run(), "Next")
 
 
 def complete_server_steps(app: AppTest, server_key: str, *, blast_value: str = "2") -> AppTest:
     """Walk one server's three steps, rating everything, leaving the app on the next page."""
-    app = set_page_radios(app, f"impact__{server_key}__", 3)
+    app = set_ratings(app, impact_keys(server_key), 3)
     app = click(app, "Next")
-    app = set_page_radios(app, f"sensitivity__{server_key}__", 3)
+    app = set_ratings(app, sensitivity_keys(server_key), 3)
     app = click(app, "Next")
-    for box in app.selectbox:
-        if box.key and box.key.startswith(f"blast__{server_key}__"):
-            box.set_value(blast_value)
+    for key in blast_keys(server_key):
+        app.session_state[key] = blast_value
     return click(app.run(), "Next")
 
 
@@ -98,14 +119,14 @@ class TestRatingSteps:
         assert "get-event" in errors(app)
 
     def test_rating_every_tool_advances_to_asset_sensitivity(self):
-        app = set_page_radios(complete_intro(run_app()), "impact__calendar__", 3)
+        app = set_ratings(complete_intro(run_app()), impact_keys("calendar"), 3)
         app = click(app, "Next")
         assert not app.exception
         assert app.session_state["page"] == 2
 
     def test_blast_matrix_renders_one_cell_per_asset_tool_pair(self):
-        app = set_page_radios(complete_intro(run_app()), "impact__calendar__", 3)
-        app = set_page_radios(click(app, "Next"), "sensitivity__calendar__", 3)
+        app = set_ratings(complete_intro(run_app()), impact_keys("calendar"), 3)
+        app = set_ratings(click(app, "Next"), sensitivity_keys("calendar"), 3)
         app = click(app, "Next")
         cells = [b for b in app.selectbox if b.key and b.key.startswith("blast__calendar__")]
         assert len(cells) == 16  # only the live pairs are rateable
@@ -115,8 +136,8 @@ class TestRatingSteps:
         assert page_text(app).count('class="na-cell"') == 30 - 16
 
     def test_blast_matrix_is_laid_out_with_tools_as_rows_and_assets_as_columns(self):
-        app = set_page_radios(complete_intro(run_app()), "impact__calendar__", 3)
-        app = set_page_radios(click(app, "Next"), "sensitivity__calendar__", 3)
+        app = set_ratings(complete_intro(run_app()), impact_keys("calendar"), 3)
+        app = set_ratings(click(app, "Next"), sensitivity_keys("calendar"), 3)
         app = click(app, "Next")
         text = page_text(app)
         assert "Tool \ Virtual asset" in text
@@ -132,19 +153,19 @@ class TestRatingSteps:
         app = complete_intro(run_app())
         impact_text = page_text(app)
         assert 'class="grid-head">Tool<' in impact_text
-        app = set_page_radios(app, "impact__calendar__", 3)
+        app = set_ratings(app, impact_keys("calendar"), 3)
         sensitivity_text = page_text(click(app, "Next"))
         assert 'class="grid-head">Virtual asset<' in sensitivity_text
 
     def test_blast_step_blocks_until_every_cell_is_rated(self):
-        app = set_page_radios(complete_intro(run_app()), "impact__calendar__", 3)
-        app = set_page_radios(click(app, "Next"), "sensitivity__calendar__", 3)
+        app = set_ratings(complete_intro(run_app()), impact_keys("calendar"), 3)
+        app = set_ratings(click(app, "Next"), sensitivity_keys("calendar"), 3)
         app = click(click(app, "Next"), "Next")
         assert "16 of 16 tool/asset cells are not yet rated" in errors(app)
 
     def test_scoring_only_some_blast_cells_still_blocks(self):
-        app = set_page_radios(complete_intro(run_app()), "impact__calendar__", 3)
-        app = set_page_radios(click(app, "Next"), "sensitivity__calendar__", 3)
+        app = set_ratings(complete_intro(run_app()), impact_keys("calendar"), 3)
+        app = set_ratings(click(app, "Next"), sensitivity_keys("calendar"), 3)
         app = click(app, "Next")
         next(b for b in app.selectbox if b.key.startswith("blast__calendar__")).set_value("4")
         app = click(app.run(), "Next")
@@ -152,8 +173,8 @@ class TestRatingSteps:
         assert app.session_state["page"] == 3
 
     def test_scoring_every_blast_cell_unblocks_the_step(self):
-        app = set_page_radios(complete_intro(run_app()), "impact__calendar__", 3)
-        app = set_page_radios(click(app, "Next"), "sensitivity__calendar__", 3)
+        app = set_ratings(complete_intro(run_app()), impact_keys("calendar"), 3)
+        app = set_ratings(click(app, "Next"), sensitivity_keys("calendar"), 3)
         app = click(app, "Next")
         for box in app.selectbox:
             if box.key and box.key.startswith("blast__calendar__"):
@@ -164,9 +185,33 @@ class TestRatingSteps:
         assert app.session_state["page"] == 4
 
 
+class TestRatingButtons:
+    def test_clicking_a_rating_button_records_it(self):
+        app = complete_intro(run_app())
+        key = impact_keys("calendar")[0]
+        app = app.button(key=f"{key}__opt4").click().run()
+        assert app.session_state[key] == 4
+
+    def test_the_selected_button_is_the_primary_one(self):
+        app = complete_intro(run_app())
+        key = impact_keys("calendar")[0]
+        app = app.button(key=f"{key}__opt4").click().run()
+        selected = app.button(key=f"{key}__opt4")
+        assert selected.proto.type == "primary"
+        assert app.button(key=f"{key}__opt2").proto.type == "secondary"
+
+    def test_every_rating_row_offers_five_buttons(self):
+        app = complete_intro(run_app())
+        keys = {b.key.rsplit("__opt", 1)[0] for b in app.button if b.key and "__opt" in b.key}
+        assert keys == set(impact_keys("calendar"))
+        for key in keys:
+            present = [b for b in app.button if b.key and b.key.startswith(f"{key}__opt")]
+            assert len(present) == 5, key
+
+
 class TestAnswersSurviveNavigation:
     def test_going_back_and_forward_preserves_ratings(self):
-        app = set_page_radios(complete_intro(run_app()), "impact__calendar__", 4)
+        app = set_ratings(complete_intro(run_app()), impact_keys("calendar"), 4)
         app = click(app, "Next")
         app = click(app, "← Back")
         assert app.session_state["page"] == 1
@@ -175,8 +220,8 @@ class TestAnswersSurviveNavigation:
 
     def test_ratings_two_sections_back_are_not_garbage_collected(self):
         # Streamlit drops widget state for off-screen pages unless it is pinned.
-        app = set_page_radios(complete_intro(run_app()), "impact__calendar__", 5)
-        app = set_page_radios(click(app, "Next"), "sensitivity__calendar__", 2)
+        app = set_ratings(complete_intro(run_app()), impact_keys("calendar"), 5)
+        app = set_ratings(click(app, "Next"), sensitivity_keys("calendar"), 2)
         app = click(app, "Next")  # now on the Blast Radius step
         assert app.session_state["impact__calendar__get-event"] == 5
         assert app.session_state["sensitivity__calendar__executive"] == 2
@@ -193,7 +238,7 @@ class TestSubmission:
             app = complete_server_steps(app, server.key)
             assert not app.exception
 
-        app.radio(key="confidence").set_value(5)
+        app.session_state["confidence"] = 5
         app = click(app.run(), "Submit")
 
         assert not app.exception

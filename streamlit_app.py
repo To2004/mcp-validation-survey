@@ -46,140 +46,122 @@ SCALE_LABELS = {
     "blast": "Blast Radius",
 }
 BLAST_OPTIONS = ["1", "2", "3", "4", "5"]
+RATING_LABEL_WIDTH = 3.2
 RATING_OPTIONS = [1, 2, 3, 4, 5]
 
 FORM_CSS = """
 <style>
-  /* Palette: neutral page, white cards, one accent. Kept low-saturation so the
-     rating grids stay legible over long sessions (see docs/design-notes.md). */
   :root {
       --accent: #2563eb;
       --ink: #0f172a;
       --ink-soft: #475569;
       --line: #d8e0ec;
-      --zebra: #f7f9fc;
+      --zebra: #f8fafc;
   }
   .stApp { background: #eef2f7; }
-  .block-container { max-width: 1180px; padding-top: 1.6rem; padding-bottom: 4rem; }
+  .block-container { max-width: 1280px; padding: 1.5rem 1.5rem 4rem 1.5rem; }
   html, body, [class*="css"] { color: var(--ink); }
 
   div[data-testid="stVerticalBlockBorderWrapper"] {
       background: #ffffff;
       border: 1px solid var(--line) !important;
       border-radius: 10px;
-      padding: 6px 10px;
+      padding: 10px 18px;
   }
   .form-header {
       background: #ffffff;
       border: 1px solid var(--line);
       border-top: 8px solid var(--accent);
       border-radius: 10px;
-      padding: 22px 26px 18px 26px;
-      margin-bottom: 14px;
+      padding: 24px 28px 20px 28px;
+      margin-bottom: 16px;
   }
-  .form-header h1 { margin: 0 0 6px 0; font-size: 29px; font-weight: 600; color: var(--ink); }
-  .form-header p  { margin: 0; color: var(--ink-soft); font-size: 14px; }
+  .form-header h1 { margin: 0 0 8px 0; font-size: 32px; font-weight: 600; color: var(--ink); }
+  .form-header p  { margin: 0; color: var(--ink-soft); font-size: 16px; }
   .required { color: #d93025; }
-  .question-title { font-size: 17px; color: var(--ink); margin-bottom: 2px; }
 
+  .question-title { font-size: 19px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+  .row-name { font-size: 18px; font-weight: 600; color: var(--ink); margin: 2px 0 4px 0; }
   .question-help {
-      font-size: 15px;
+      font-size: 16px;
       line-height: 1.55;
       color: var(--ink-soft);
       background: #f1f5f9;
-      border-left: 3px solid var(--accent);
-      padding: 9px 13px;
+      border-left: 4px solid var(--accent);
+      padding: 10px 14px;
       border-radius: 4px;
-      margin: 6px 0 10px 0;
+      margin: 4px 0 8px 0;
   }
   .level-def {
-      font-size: 15px;
-      line-height: 1.55;
+      font-size: 16px;
+      line-height: 1.6;
       color: var(--ink-soft);
       background: #f8fafc;
-      border-left: 3px solid var(--accent);
-      padding: 10px 14px;
+      border-left: 4px solid var(--accent);
+      padding: 12px 16px;
       border-radius: 4px;
       margin-bottom: 8px;
   }
   .level-def b { color: var(--accent); }
-
-  /* How-to-answer callout above each rating grid. */
   .howto {
       background: #eff6ff;
       border: 1px solid #bfdbfe;
       border-radius: 8px;
-      padding: 12px 16px;
-      margin: 10px 0 14px 0;
-      font-size: 15px;
+      padding: 14px 18px;
+      margin: 12px 0 16px 0;
+      font-size: 16px;
       line-height: 1.6;
       color: #1e3a8a;
   }
   .howto b { color: #1e40af; }
 
-  /* ---- Likert grid -------------------------------------------------------
-     Each row is its own radio group (accessible to screen readers as a normal
-     question) but is laid out on a 5-column CSS grid so the circles line up
-     under the numbered header. */
+  /* ---- rating grid ----
+     One Streamlit column per scale point, so the buttons align with the header
+     by construction. No dependence on the internals of any widget. */
   .grid-head {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--ink-soft);
-      text-transform: uppercase;
-      letter-spacing: .5px;
-      padding: 6px 0 8px 0;
-  }
-  .scale-head {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      width: 100%;
-      padding-bottom: 6px;
-  }
-  .scale-head span {
-      text-align: center;
       font-size: 13px;
       font-weight: 700;
       color: var(--ink-soft);
-      border-left: 1px solid var(--line);
-      padding: 0 2px;
-      line-height: 1.25;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      padding: 10px 0 6px 0;
   }
-  .scale-head span small {
+  .scale-num {
+      text-align: center;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--ink);
+      padding: 8px 2px 6px 2px;
+      line-height: 1.2;
+  }
+  .scale-num small {
       display: block;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 500;
-      text-transform: none;
-      letter-spacing: 0;
-      color: #94a3b8;
+      color: var(--ink-soft);
+      line-height: 1.3;
+      min-height: 1.3em;
   }
-  div[data-testid="stRadio"] > div { width: 100% !important; }
-  div[data-testid="stRadio"] div[role="radiogroup"],
-  div[data-testid="stRadioGroup"] {
-      display: grid !important;
-      grid-template-columns: repeat(5, 1fr) !important;
-      width: 100% !important;
-      gap: 0 !important;
+  /* Rating buttons: circular, large enough to be an easy target. */
+  div[data-testid="stButton"] > button {
+      border-radius: 999px;
+      font-size: 17px;
+      font-weight: 600;
+      min-height: 46px;
+      border: 2px solid var(--line);
+      transition: none;
   }
-  div[data-testid="stRadio"] div[role="radiogroup"] > *,
-  div[data-testid="stRadioGroup"] > * {
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      margin: 0 !important;
-      padding: 12px 0 !important;
-      border-left: 1px solid var(--line);
-      min-width: 0;
-      cursor: pointer;
+  div[data-testid="stButton"] > button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: #eff6ff;
   }
-  div[data-testid="stRadio"] div[role="radiogroup"] > *:hover,
-  div[data-testid="stRadioGroup"] > *:hover { background: #eff6ff; }
-  /* The header row numbers the columns, so hide each option's own label text. */
-  div[data-testid="stRadio"] label > div:last-child { display: none !important; }
 
-  /* Subtle zebra striping on grid rows. Low saturation, per readability research. */
+  /* Row separators and faint zebra striping on grid rows. */
   div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stHorizontalBlock"] {
       align-items: center;
       border-top: 1px solid var(--line);
+      padding: 6px 0;
   }
   div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stHorizontalBlock"]:nth-of-type(even) {
       background: var(--zebra);
@@ -193,9 +175,9 @@ FORM_CSS = """
       color: #94a3b8;
       background: #f1f5f9;
       border: 1px dashed var(--line);
-      border-radius: 4px;
-      padding: 7px 0;
-      font-size: 13px;
+      border-radius: 6px;
+      padding: 11px 0;
+      font-size: 14px;
       letter-spacing: .5px;
   }
   .stProgress > div > div > div > div { background-color: var(--accent); }
@@ -382,6 +364,27 @@ def go_next(config: SurveyConfig) -> None:
 # ------------------------------------------------------------------------ widgets
 
 
+def simple_scale(key: str, low_label: str, high_label: str) -> None:
+    """A standalone 1-5 scale: numbers spread across five columns, ends named."""
+    current = st.session_state.get(key)
+    columns = st.columns(5)
+    for index, (column, value) in enumerate(zip(columns, RATING_OPTIONS)):
+        with column:
+            anchor = low_label if index == 0 else (high_label if index == 4 else "")
+            st.markdown(
+                f'<div class="scale-num">{value}<small>{anchor}</small></div>',
+                unsafe_allow_html=True,
+            )
+            st.button(
+                str(value),
+                key=f"{key}__opt{value}",
+                type="primary" if current == value else "secondary",
+                on_click=set_rating,
+                args=(key, value),
+                use_container_width=True,
+            )
+
+
 def question_card(title: str, help_text: str = "", required: bool = False):
     """A bordered white card with a Forms-style question heading."""
     card = st.container(border=True)
@@ -393,29 +396,58 @@ def question_card(title: str, help_text: str = "", required: bool = False):
     return card
 
 
-def rating_radio(label: str, key: str, options=RATING_OPTIONS):
-    """A horizontal radio whose value lives in session state.
+def set_rating(key: str, value: int) -> None:
+    st.session_state[key] = value
 
-    `index` is passed only when the widget is first created; afterwards the pinned
-    session-state value is authoritative and passing both would conflict.
+
+def rating_cells(key: str, levels) -> None:
+    """One column per scale point, so alignment is Streamlit's job, not CSS's.
+
+    Buttons rather than a radio group: a horizontal `st.radio` lays its options out
+    at their natural width, which cannot be made to line up under a column header
+    reliably. Each button carries the level name as its tooltip, and the selected
+    one is rendered in the accent colour.
     """
-    kwargs = {} if key in st.session_state else {"index": None}
-    return st.radio(
-        label, options=options, horizontal=True, key=key, label_visibility="collapsed", **kwargs
-    )
+    current = st.session_state.get(key)
+    for column, level in zip(st.columns(len(levels)), levels):
+        with column:
+            st.button(
+                str(level.value),
+                key=f"{key}__opt{level.value}",
+                type="primary" if current == level.value else "secondary",
+                on_click=set_rating,
+                args=(key, level.value),
+                use_container_width=True,
+                help=f"{level.heading} — {level.meaning}" if level.meaning else level.heading,
+            )
+
+
+def scale_header(levels, first_column_label: str = "") -> None:
+    """Header row for a rating grid: the numbers, with both ends named."""
+    columns = st.columns([RATING_LABEL_WIDTH] + [1] * len(levels)) if first_column_label else st.columns(len(levels))
+    if first_column_label:
+        columns[0].markdown(
+            f'<div class="grid-head">{first_column_label}</div>', unsafe_allow_html=True
+        )
+        columns = columns[1:]
+    for column, level in zip(columns, levels):
+        anchor = f"<small>{level.label}</small>" if level.value in (1, len(levels)) else ""
+        column.markdown(
+            f'<div class="scale-num">{level.value}{anchor}</div>', unsafe_allow_html=True
+        )
 
 
 HOWTO = {
     "impact": (
-        "<b>How to answer:</b> each row is one tool. Pick one circle per row — the "
+        "<b>How to answer:</b> each row is one tool. Click one number per row — the "
         "column number is the Tool Impact level. Open <i>Tool Impact levels</i> above "
-        "if you need the definitions. Judge each tool on its own, not against the "
-        "others; levels may repeat."
+        "for the definitions. Judge each tool on its own, not against the others; "
+        "levels may repeat."
     ),
     "sensitivity": (
-        "<b>How to answer:</b> each row is one virtual asset. Pick one circle per row — "
-        "the column number is the Asset Sensitivity level. Judge each asset on its own; "
-        "levels may repeat."
+        "<b>How to answer:</b> each row is one virtual asset. Click one number per row "
+        "— the column number is the Asset Sensitivity level. Judge each asset on its "
+        "own; levels may repeat."
     ),
     "blast": (
         "<b>How to answer:</b> each row is a tool, each column a virtual asset. Choose "
@@ -440,31 +472,33 @@ def scale_reference(config: SurveyConfig, dimension: str) -> None:
 
 
 def radio_grid(config: SurveyConfig, dimension: str, server: Server, items, key_fn, noun: str) -> None:
-    """One table: a row per item, with its description, and a 1-5 radio per row."""
-    with st.container(border=True):
-        levels = config.scales[dimension]
-        heading, scale = st.columns([3, 4])
-        heading.markdown(f'<div class="grid-head">{noun}</div>', unsafe_allow_html=True)
-        # Anchor the ends of the scale, per survey-design guidance: a bare 1-5 row
-        # leaves the direction of the scale ambiguous.
-        cells = []
-        for level in levels:
-            anchor = level.label if level.value in (1, 5) else ""
-            cells.append(f"<span>{level.value}<small>{anchor}</small></span>")
-        scale.markdown('<div class="scale-head">' + "".join(cells) + "</div>", unsafe_allow_html=True)
+    """One table: a row per item, five rating columns, header and rows sharing a spec."""
+    levels = config.scales[dimension]
+    widths = [RATING_LABEL_WIDTH] + [1] * len(levels)
 
+    with st.container(border=True):
+        scale_header(levels, noun)
         for item in items:
-            label_column, rating_column = st.columns([3, 4])
-            with label_column:
+            row = st.columns(widths)
+            with row[0]:
                 st.markdown(
-                    f'<div class="question-title"><b>{item.name}</b></div>', unsafe_allow_html=True
+                    f'<div class="row-name">{item.name}</div>', unsafe_allow_html=True
                 )
                 if item.desc:
                     st.markdown(f'<div class="question-help">{item.desc}</div>', unsafe_allow_html=True)
-            with rating_column:
-                rating_radio(
-                    f"{SCALE_LABELS[dimension]} rating for {item.name}", key_fn(server, item.name)
-                )
+            key = key_fn(server, item.name)
+            current = st.session_state.get(key)
+            for column, level in zip(row[1:], levels):
+                with column:
+                    st.button(
+                        str(level.value),
+                        key=f"{key}__opt{level.value}",
+                        type="primary" if current == level.value else "secondary",
+                        on_click=set_rating,
+                        args=(key, level.value),
+                        use_container_width=True,
+                        help=f"{level.heading} — {level.meaning}",
+                    )
 
 
 def blast_matrix(server: Server) -> None:
@@ -530,13 +564,11 @@ def render_intro(config: SurveyConfig) -> None:
     with question_card("Email address", "Optional. Used only if follow-up is required."):
         st.text_input("Email address", key="email", label_visibility="collapsed")
 
-    with question_card("Familiarity with LLM agents", "1 — Not familiar · 5 — Very familiar", required=True):
-        rating_radio("Familiarity with LLM agents", "familiarity_llm_agents")
+    with question_card("Familiarity with LLM agents", required=True):
+        simple_scale("familiarity_llm_agents", "Not familiar", "Very familiar")
 
-    with question_card(
-        "Familiarity with MCP", "1 — Never heard of it · 5 — Very familiar / have used it", required=True
-    ):
-        rating_radio("Familiarity with MCP", "familiarity_mcp")
+    with question_card("Familiarity with MCP", required=True):
+        simple_scale("familiarity_mcp", "Never heard of it", "Very familiar / used it")
 
     with question_card("Consent", required=True):
         st.checkbox(config.consent, key="consent")
@@ -576,8 +608,8 @@ def render_feedback(config: SurveyConfig) -> None:
     with question_card("Comments", "Optional free-text feedback."):
         st.text_area("Comments", key="comments", label_visibility="collapsed")
 
-    with question_card("Overall confidence in your ratings", "1 — Very low · 5 — Very high"):
-        rating_radio("Overall confidence in your ratings", "confidence")
+    with question_card("Overall confidence in your ratings"):
+        simple_scale("confidence", "Very low", "Very high")
 
 
 # ------------------------------------------------------------------------- submit
