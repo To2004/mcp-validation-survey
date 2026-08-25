@@ -24,9 +24,15 @@ jobs:
           URL="https://tem6j6jhm5dtyan6mq7mtl.streamlit.app"
           echo "Pinging $URL"
 
+          # Streamlit answers the first request with a 303 to its auth endpoint to
+          # bootstrap a session cookie, then redirects back. That is normal for a
+          # public app, but it only resolves to 200 if cookies are kept across the
+          # redirect chain - hence the cookie jar.
+          #
           # Assign, then check the exit status separately: putting `|| echo 000`
           # inside the substitution concatenates curl's output with the fallback.
           STATUS=$(curl -sS -o /dev/null -L --max-time 90 \
+                        -c cookies.txt -b cookies.txt \
                         -A "keep-awake-bot (github actions)" \
                         -w '%{http_code}' "$URL") || STATUS="000"
           echo "final HTTP status: $STATUS"
