@@ -23,8 +23,16 @@ jobs:
         run: |
           URL="https://tem6j6jhm5dtyan6mq7mtl.streamlit.app"
           echo "Pinging $URL"
-          STATUS=$(curl -sS -o /dev/null -w '%{http_code}' -L --max-time 90 "$URL" || echo "000")
-          echo "HTTP $STATUS"
-          if [ "$STATUS" != "200" ]; then
-            echo "::warning::Ping returned $STATUS - the app may be asleep or down."
-          fi
+
+          # Assign, then check the exit status separately: putting `|| echo 000`
+          # inside the substitution concatenates curl's output with the fallback.
+          STATUS=$(curl -sS -o /dev/null -L --max-time 90 \
+                        -A "keep-awake-bot (github actions)" \
+                        -w '%{http_code}' "$URL") || STATUS="000"
+          echo "final HTTP status: $STATUS"
+
+          case "$STATUS" in
+            2*) echo "App is awake." ;;
+            000) echo "::warning::Request failed outright - app may be down." ;;
+            *)  echo "::warning::Unexpected status $STATUS - check the app." ;;
+          esac
