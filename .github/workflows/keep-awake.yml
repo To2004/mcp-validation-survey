@@ -1,28 +1,50 @@
-# Streamlit Community Cloud puts an app to sleep after a period with no traffic.
-# A sleeping app greets the next visitor with a "Zzzz" screen and a two-minute
-# rebuild, which is a good way to lose participants. This workflow requests the
-# app periodically so it stays warm while the study is running.
+# Streamlit Community Cloud puts an app to sleep after 12 hours without traffic.
+# A sleeping app greets the next visitor with a "Zzzz" screen and a rebuild wait,
+# which is a good way to lose participants. This workflow requests the app
+# periodically so it stays warm while the study is running.
 #
-# Turn it off when data collection ends: Actions -> Keep the survey awake ->
-# "..." -> Disable workflow. It costs nothing on a public repo, but there is no
-# reason to keep pinging a survey nobody is filling in.
+# It stops on its own at COLLECTION_ENDS below, and disables itself so it stops
+# consuming Actions runs. To extend the study, change that date and re-enable the
+# workflow (Actions -> Keep the survey awake -> "..." -> Enable workflow).
 
 name: Keep the survey awake
 
+env:
+  APP_URL: "https://tem6j6jhm5dtyan6mq7mtl.streamlit.app"
+  # Last day to keep the app warm, inclusive, UTC.
+  COLLECTION_ENDS: "2026-09-09"
+
 on:
   schedule:
-    # Every 30 minutes. GitHub often runs scheduled jobs late, which is fine here.
+    # Every 30 minutes. GitHub runs scheduled jobs late and sometimes skips them
+    # on free runners - in practice this fires roughly hourly, which is still far
+    # inside the 12 hour sleep window.
     - cron: "*/30 * * * *"
-  workflow_dispatch: # lets you wake it on demand from the Actions tab
+  workflow_dispatch: # lets you ping on demand from the Actions tab
+
+permissions:
+  actions: write # so the job can disable this workflow when the window closes
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Request the app
+      - name: Check the collection window
+        id: window
         run: |
-          URL="https://tem6j6jhm5dtyan6mq7mtl.streamlit.app"
-          echo "Pinging $URL"
+          TODAY=$(date -u +%F)
+          echo "today (UTC): $TODAY, window ends: $COLLECTION_ENDS"
+          if [ "$TODAY" \> "$COLLECTION_ENDS" ]; then
+            echo "expired=true" >> "$GITHUB_OUTPUT"
+            echo "Collection window has closed."
+          else
+            echo "expired=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Request the app
+        if: steps.window.outputs.expired == 'false'
+        run: |
+          echo "Pinging $APP_URL"
 
           # Streamlit answers the first request with a 303 to its auth endpoint to
           # bootstrap a session cookie, then redirects back. That is normal for a
@@ -34,7 +56,7 @@ jobs:
           STATUS=$(curl -sS -o /dev/null -L --max-time 90 \
                         -c cookies.txt -b cookies.txt \
                         -A "keep-awake-bot (github actions)" \
-                        -w '%{http_code}' "$URL") || STATUS="000"
+                        -w '%{http_code}' "$APP_URL") || STATUS="000"
           echo "final HTTP status: $STATUS"
 
           case "$STATUS" in
@@ -42,3 +64,11 @@ jobs:
             000) echo "::warning::Request failed outright - app may be down." ;;
             *)  echo "::warning::Unexpected status $STATUS - check the app." ;;
           esac
+
+      - name: Retire this workflow once the window closes
+        if: steps.window.outputs.expired == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "::notice::Collection window ended $COLLECTION_ENDS - disabling the keep-awake workflow."
+          gh workflow disable "Keep the survey awake" --repo "$GITHUB_REPOSITORY"
