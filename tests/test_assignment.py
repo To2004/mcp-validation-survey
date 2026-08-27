@@ -20,6 +20,7 @@ def server(key: str) -> Server:
         title=key.title(),
         enabled=True,
         scenario="",
+        mcp_context="",
         tools=(Item("t", "d"),),
         assets=(Item("a", "d"),),
         blast_tools=("t",),
