@@ -1,8 +1,14 @@
 # NOTE: changes under survey/ are NOT picked up by a plain redeploy. Streamlit
 # Cloud re-runs streamlit_app.py in the existing Python process, which keeps the
 # already-imported survey.* modules in sys.modules - so the new entry script runs
-# against the old classes and dies with AttributeError. Reboot the app (Manage app
-# -> "..." -> Reboot app), or touch this file to force a fresh environment.
+# against the old classes and dies with AttributeError. Reboot the app after those
+# (Manage app -> "..." -> Reboot app).
+
 streamlit>=1.37
 supabase>=2.4
-gspread>=6.0
+
+# Streamlit Cloud installs pyarrow 25, detects a known segfault, then uninstalls
+# and reinstalls an older one - paying for the largest wheel in the set twice.
+# Pinning it under 25 makes that happen once, which shortens every cold boot and
+# every wake-from-sleep a participant might hit.
+pyarrow<25

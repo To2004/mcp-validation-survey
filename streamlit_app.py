@@ -460,8 +460,9 @@ def rating_cells(key: str, levels) -> None:
 
     Buttons rather than a radio group: a horizontal `st.radio` lays its options out
     at their natural width, which cannot be made to line up under a column header
-    reliably. Each button carries the level name as its tooltip, and the selected
-    one is rendered in the accent colour.
+    reliably. The selected one is rendered in the accent colour. No tooltip - a
+    hover card popping up over the row above it obscured the grid; the level
+    definitions live in the expander at the top of the step instead.
     """
     current = st.session_state.get(key)
     for column, level in zip(st.columns(len(levels)), levels):
@@ -473,7 +474,6 @@ def rating_cells(key: str, levels) -> None:
                 on_click=set_rating,
                 args=(key, level.value),
                 use_container_width=True,
-                help=f"{level.heading} — {level.meaning}" if level.meaning else level.heading,
             )
 
 
@@ -552,7 +552,6 @@ def radio_grid(config: SurveyConfig, dimension: str, server: Server, items, key_
                         on_click=set_rating,
                         args=(key, level.value),
                         use_container_width=True,
-                        help=f"{level.heading} — {level.meaning}",
                     )
 
 
