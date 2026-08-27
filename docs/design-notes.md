@@ -25,8 +25,9 @@ radios is hard to navigate with a screen reader, and the usual advice is to fall
 back to a series of individual questions.
 
 No layout table is involved: the grid is made of ordinary containers, and each
-rating control is a real focusable button carrying its level name and definition as
-a tooltip (`1 — Liveness — The system only says "I am here" …`).
+rating control is a real focusable button. The buttons carried their level definition
+as a tooltip until the hover card was found to cover the row above it while choosing;
+the definitions now sit in an expander at the top of each step, open by default.
 
 **Trade-off, stated plainly:** these are buttons, not a native radio group, so a
 screen reader announces five buttons in a row rather than "1 of 5 selected". That is

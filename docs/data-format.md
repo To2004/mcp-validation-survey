@@ -31,7 +31,7 @@ Rating columns are named by dimension, server and target:
 
 ```
 impact__<server>__<tool>            impact__calendar__get-event
-sens__<server>__<asset>             sens__calendar__executive
+sens__<server>__<asset>             sens__calendar__exec-calendar
 blast__<server>__<asset>__<tool>    blast__calendar__executive__get-event
 ```
 
@@ -43,9 +43,9 @@ name that would break this.
 
 | Dimension | Values |
 | --- | --- |
-| Tool Impact | 1–5 (No effect to Destructive or executing action), or `unsure` |
-| Asset Sensitivity | 1–5 (Public to Crown jewel), or `unsure` |
-| Blast Radius | 1–5 (Negligible to Systemic) |
+| Action Impact | 1–5 (No material effect to Irreversible or consequential), or `unsure` |
+| Asset Confidentiality | 1–5 (Public to Strictly confidential), or `unsure` |
+| Consequence Scope | 1–5 (One item or person to Cascading), or `unsure` |
 
 Blast Radius cells can also hold `N/A`, but participants never choose it. The matrix is
 pre-restricted to the pairs the scanner says exist: a tool that acts on no asset has no
@@ -88,8 +88,18 @@ Columns: `submission_id`, `participant_id`, `dimension`, `server`, `asset`, `too
 `tool` is blank for sensitivity rows. This is the shape to join against the scanner's
 per-tool and per-asset output for agreement analysis.
 
-## Analysis caveat
+## Analysis caveats
 
-The Blast Radius matrix and the Asset Sensitivity step rate **different asset sets** on
-every server. See [known-issues.md](known-issues.md) before pairing sensitivity with
-blast scores.
+* **`unsure` is not missing data.** Participants opt out on the items they could not
+  judge — the informative ones. Dropping those rows and reporting agreement on the
+  remainder conditions the result on items people were confident about, and inflates
+  it. Report the per-item unsure rate alongside any agreement figure, and never impute
+  a value for it.
+* **Exclude N/A cells from agreement statistics.** They are the scanner's own input
+  echoed back, not a participant judgement; counting them as agreements inflates kappa
+  mechanically.
+* **Do not compare levels across servers.** Server is confounded with organisation,
+  asset order, the impact range its tools span, and N/A density.
+* **Ratings are not independent observations.** They are nested within participant and
+  server, and matrix cells correlate along their row and column. Aggregate to item
+  means, or use a mixed model.

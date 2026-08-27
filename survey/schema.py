@@ -147,7 +147,12 @@ def long_format_rows(
         }
         # Only the servers this participant was assigned produced ratings; emitting
         # empty records for the others would pad the long export with non-answers.
-        for server in assigned_servers(config, row):
+        #
+        # A row with no assignment recorded predates that column. Falling back to
+        # every enabled server keeps it in the export: returning nothing for it
+        # loses the response silently, which is far worse than a few blank cells.
+        covered = assigned_servers(config, row) or list(config.enabled_servers)
+        for server in covered:
             for tool in server.tools:
                 records.append(
                     {
@@ -190,11 +195,18 @@ def assigned_servers(config: SurveyConfig, row: dict[str, Any]) -> list[Server]:
     return [server for server in config.enabled_servers if server.key in keys]
 
 
-def missing_required(config: SurveyConfig, server: Server, answers: dict[str, Any]) -> list[str]:
+def missing_required(
+    config: SurveyConfig,
+    server: Server,
+    answers: dict[str, Any],
+    dimension: str | None = None,
+) -> list[str]:
     """Human-readable list of what is still unanswered in one server section.
 
-    Only live Blast Radius cells are required; read-only N/A cells are not. The count
-    is reported rather than the cell names, since a matrix has up to 35 of them.
+    Only live cells are required; read-only N/A cells are not. "Not sure" counts as
+    answered, exactly as it does on the other two steps - the intro promises the
+    option on every question, so the matrix must honour it too. The count is
+    reported rather than the cell names, since a matrix has up to 42 of them.
     """
     labels = getattr(config, "scale_labels", {})
     impact_label = labels.get("impact", "Action Impact")
@@ -202,17 +214,23 @@ def missing_required(config: SurveyConfig, server: Server, answers: dict[str, An
     blast_label = labels.get("blast", "Consequence Scope")
 
     problems: list[str] = []
-    impact = answers.get("impact", {}).get(server.key, {})
-    unrated_tools = [tool.name for tool in server.tools if impact.get(tool.name) in (None, "")]
-    if unrated_tools:
-        problems.append(f"{impact_label}: " + ", ".join(unrated_tools))
 
-    sensitivity = answers.get("sensitivity", {}).get(server.key, {})
-    unrated_assets = [
-        asset.name for asset in server.assets if sensitivity.get(asset.name) in (None, "")
-    ]
-    if unrated_assets:
-        problems.append(f"{sensitivity_label}: " + ", ".join(unrated_assets))
+    if dimension in (None, "impact"):
+        impact = answers.get("impact", {}).get(server.key, {})
+        unrated_tools = [tool.name for tool in server.tools if impact.get(tool.name) in (None, "")]
+        if unrated_tools:
+            problems.append(f"{impact_label}: " + ", ".join(unrated_tools))
+
+    if dimension in (None, "sensitivity"):
+        sensitivity = answers.get("sensitivity", {}).get(server.key, {})
+        unrated_assets = [
+            asset.name for asset in server.assets if sensitivity.get(asset.name) in (None, "")
+        ]
+        if unrated_assets:
+            problems.append(f"{sensitivity_label}: " + ", ".join(unrated_assets))
+
+    if dimension not in (None, "blast"):
+        return problems
 
     blast = answers.get("blast", {}).get(server.key, {})
     unrated_cells = [cell for cell in server.live_blast_cells if blast.get(cell) in (None, "")]

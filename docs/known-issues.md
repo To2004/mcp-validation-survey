@@ -4,29 +4,15 @@ Findings from converting `MCP_Static_Scanner_Validation_Form_v9.docx` into this 
 The app reproduces the form as written and does **not** silently correct it. Read this
 before analysing results.
 
-## 1. Blast Radius rates different assets from Asset Sensitivity
+## 1. Asset sets now match — RESOLVED
 
-On every server, the Step 3 matrix rows are not the Step 2 asset list. Some assets are
-rated for sensitivity but never appear in the matrix; others appear in the matrix but
-are never rated for sensitivity.
+The v9 form rated one asset set for Asset Sensitivity and a different one for Blast
+Radius, so several assets had a blast score with no sensitivity score and vice versa.
 
-| Server | In the matrix but never rated for sensitivity | Rated for sensitivity but not in the matrix |
-| --- | --- | --- |
-| Google Calendar | `calendar-records`, `free-busy-availability`, `recruiting` | `calendar-directory`, `connected-account-config`, `holidays`, `team` |
-| GitHub | `backend-api`, `issues-and-comments`, `payments-service` | `internal-docs`, `public-website`, `repository-catalog`, `repository-contents` |
-| Slack | `exec-private`, `read-markers` | `announcements`, `engineering`, `incident-response` |
-| Filesystem | `product-source` | `project-material`, `public-overview` |
-| SQL Database | `database-records`, `grants`, `table-catalog` | `datasets`, `projects`, `publications`, `table-metadata` |
-
-**Consequence.** For an asset in the left column you have a human blast score but no
-human sensitivity score, so no human `sensitivity x blast` risk value can be computed
-for it. For an asset in the right column the reverse holds. Only the overlapping
-assets support a full human-side risk score.
-
-**Options.** Either (a) analyse the three dimensions separately against the scanner,
-which needs no change; or (b) align the two asset lists in `survey_config.json` before
-collecting data. The app surfaces this list in the researcher panel under *Survey
-design warnings*.
+Fixed. The survey content is now generated from the scanner's own results rather than
+from the form, and each server presents the **same seven assets** in both steps.
+`lint()` reports nothing, and a human `confidentiality x scope` value can be computed
+for every asset.
 
 ## 2. Blast Radius level 5 — RESOLVED
 
@@ -49,18 +35,20 @@ the question the scanner answers. Note the Tool Impact ladder changed shape in d
 so: it is now read / write / remove (No effect, Metadata, Content read or small
 write, Write, Removal or execution), not the earlier reversible/irreversible framing.
 
-## 3. Tool Impact does not span 1–5 on most servers
+## 3. Action Impact does not span 1–5 on most servers
 
-This one is intentional and documented in the form's own provenance note: Google
-Calendar covers 1–5, GitHub only 2–4, Slack 2–5, Filesystem 2–4, SQL Database 2–5.
-Only Google Calendar has a liveness (level 1) tool.
+Only Google Calendar includes a level-1 tool (`get-current-time`). The other servers
+start at 2, and GitHub's selected tools reach only 4 — its catalogue has no
+destructive operation in the set chosen. The ranges follow from the tools each server
+actually offers, not from an oversight.
 
 **Consequence.** Do not expect the full range per server, and do not treat a missing
 level as participant error.
 
 ## 4. The form says "five MCP servers", the tool counts are subsets
 
-The scenarios describe the real catalogs (13 Calendar tools, 26 GitHub, 16 Slack, 14
-Filesystem, 5 SQL), but participants rate a 7-tool subset of each (5 for SQL). This is
-deliberate sampling; the scenario wording keeps the real numbers so participants judge
-against the real surface. Worth stating explicitly in your write-up.
+The context describes the real catalogues (13 Calendar tools, 26 GitHub, 16 Slack, 14
+Filesystem, 5 SQL), but participants rate a subset: 6 tools each, 5 for SQL. Tools and
+assets were chosen so that most tool/asset pairs are live rather than N/A — a matrix
+that is mostly N/A wastes the screen. This is deliberate sampling, and worth stating
+explicitly in your write-up.

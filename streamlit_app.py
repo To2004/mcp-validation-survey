@@ -52,7 +52,7 @@ def scale_label(config: SurveyConfig, dimension: str) -> str:
 
 def step_title(config: SurveyConfig, dimension: str) -> str:
     return f"Step {STEP_NUMBER[dimension]} — {scale_label(config, dimension)}"
-BLAST_OPTIONS = ["1", "2", "3", "4", "5"]
+BLAST_OPTIONS = ["1", "2", "3", "4", "5", UNSURE]
 RATING_LABEL_WIDTH = 3.2
 UNSURE_WIDTH = 1.5
 RATING_OPTIONS = [1, 2, 3, 4, 5]
@@ -403,8 +403,9 @@ def validate(config: SurveyConfig, kind: str, server: Server | None) -> list[str
         return []
 
     assert server is not None
-    prefix = scale_label(config, kind)
-    return [p for p in missing_required(config, server, answers) if p.startswith(prefix)]
+    # Filter by dimension key, never by the display label: two dimensions sharing
+    # a label would make a page impossible to pass.
+    return missing_required(config, server, answers, dimension=kind)
 
 
 def go_back() -> None:
@@ -505,7 +506,9 @@ def scale_header(levels, first_column_label: str) -> None:
         f'<div class="grid-head">{first_column_label}</div>', unsafe_allow_html=True
     )
     for column, level in zip(columns[1:], levels):
-        anchor = f"<small>{level.label}</small>" if level.value in (1, len(levels)) else ""
+        # Label every level, not just the ends: unlabelled middle numbers turn a
+        # defined ordinal rubric into a bare intensity scale.
+        anchor = f"<small>{level.label}</small>"
         column.markdown(
             f'<div class="scale-num">{level.value}{anchor}</div>', unsafe_allow_html=True
         )
@@ -530,8 +533,9 @@ HOWTO = {
     ),
     "blast": (
         "<b>How to answer:</b> each row is a tool, each column a virtual asset. Choose "
-        "1–5 in every open cell. Cells shown as <b>N/A</b> are pairs the tool does not "
-        "act on — they are fixed and need no answer."
+        "1–5 in every open cell, or <b>not sure</b> if you cannot judge it. Cells "
+        "shown as <b>N/A</b> are pairs the tool does not act on — they are fixed and "
+        "need no answer."
     ),
 }
 
@@ -542,7 +546,9 @@ def how_to_answer(dimension: str) -> None:
 
 def scale_reference(config: SurveyConfig, dimension: str) -> None:
     label = scale_label(config, dimension)
-    with st.expander(f"{label} levels — click to read the definitions", expanded=False):
+    # Open by default: a participant who never expands this is answering a bare
+    # 1-5 intensity scale, which is not the same instrument the scanner applies.
+    with st.expander(f"{label} levels", expanded=True):
         for level in config.scales[dimension]:
             st.markdown(
                 f'<div class="level-def"><b>{level.heading}</b> — {level.meaning}</div>',
@@ -640,6 +646,9 @@ def blast_matrix(server: Server) -> None:
                         key=key,
                         label_visibility="collapsed",
                         placeholder="—",
+                        format_func=lambda value: (
+                            "not sure" if value == UNSURE else value
+                        ),
                         **kwargs,
                     )
 

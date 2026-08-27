@@ -25,6 +25,7 @@ import csv
 import io
 import json
 import threading
+from collections import defaultdict
 from pathlib import Path
 from typing import Any, Callable, Iterable, Protocol, Sequence
 
@@ -98,6 +99,13 @@ def _counts_via_read_all(storage: "Storage") -> dict[str, int]:
     return counts_from_rows(storage.read_all())
 
 
+# One lock per file path, shared by every LocalCsvStorage pointing at it.
+# `build_storage` constructs a fresh instance on each call, so a per-instance
+# lock would leave concurrent submissions unserialised - they would interleave
+# rows and could write the header twice.
+_FILE_LOCKS: dict[Path, threading.Lock] = defaultdict(threading.Lock)
+
+
 class LocalCsvStorage:
     """Appends rows to a CSV file, writing the header on first use."""
 
@@ -105,7 +113,7 @@ class LocalCsvStorage:
 
     def __init__(self, path: str | Path):
         self.path = Path(path)
-        self._lock = threading.Lock()
+        self._lock = _FILE_LOCKS[self.path]
 
     def append(self, columns: Sequence[str], row: dict[str, Any]) -> None:
         columns = list(columns)
@@ -113,6 +121,8 @@ class LocalCsvStorage:
             with self._lock:
                 self.path.parent.mkdir(parents=True, exist_ok=True)
                 is_new = not self.path.exists() or self.path.stat().st_size == 0
+                if not is_new:
+                    self._require_matching_header(columns)
                 with self.path.open("a", encoding="utf-8", newline="") as handle:
                     writer = csv.DictWriter(handle, fieldnames=columns, extrasaction="ignore")
                     if is_new:
@@ -120,6 +130,25 @@ class LocalCsvStorage:
                     writer.writerow({column: row.get(column, "") for column in columns})
         except OSError as exc:
             raise StorageError(f"could not append to {self.path}: {exc}") from exc
+
+    def _require_matching_header(self, columns: Sequence[str]) -> None:
+        """Refuse to append under a header that does not match the survey.
+
+        DictWriter writes values positionally under whatever header is already
+        on disk. If the survey changed - a renamed asset, an added column - the
+        old header is still there and every value from the first new column
+        onward lands in the wrong field, silently. Losing the write is far
+        better than writing a row nobody can trust.
+        """
+        with self.path.open("r", encoding="utf-8", newline="") as handle:
+            existing = next(csv.reader(handle), [])
+        if existing != list(columns):
+            raise StorageError(
+                f"{self.path} was written by a different survey version "
+                f"({len(existing)} columns, now {len(columns)}). Move it aside "
+                "before collecting more responses - appending would misalign "
+                "every value."
+            )
 
     def read_all(self) -> list[dict[str, Any]]:
         if not self.path.exists():
