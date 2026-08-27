@@ -21,7 +21,6 @@ from pathlib import Path
 
 import streamlit as st
 
-from survey.assignment import choose_servers, format_assigned, parse_assigned
 from survey.config import ConfigError, Server, SurveyConfig, lint, load_config
 from survey.schema import (
     csv_columns,
@@ -171,26 +170,6 @@ FORM_CSS = """
       border-top: none;
   }
 
-  /* Text fields: a real border and a focus ring, so it is obvious where to type. */
-  div[data-testid="stTextInput"] div[data-baseweb="input"],
-  div[data-testid="stTextArea"] div[data-baseweb="textarea"],
-  div[data-testid="stTextArea"] div[data-baseweb="base-input"] {
-      background: #ffffff !important;
-      border: 1px solid #b9c4d4 !important;
-      border-radius: 6px !important;
-  }
-  div[data-testid="stTextInput"] div[data-baseweb="input"]:focus-within,
-  div[data-testid="stTextArea"] div[data-baseweb="textarea"]:focus-within,
-  div[data-testid="stTextArea"] div[data-baseweb="base-input"]:focus-within {
-      border-color: var(--accent) !important;
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
-  }
-  div[data-testid="stTextInput"] input,
-  div[data-testid="stTextArea"] textarea {
-      background: transparent !important;
-      font-size: 16px !important;
-  }
-
   .na-cell {
       text-align: center;
       color: #94a3b8;
@@ -247,7 +226,6 @@ def init_state() -> None:
     st.session_state.setdefault("submission_id", str(uuid.uuid4()))
     st.session_state.setdefault("submitted", False)
     st.session_state.setdefault("problems", [])
-    st.session_state.setdefault("assigned", [])
 
 
 # ------------------------------------------------------------- state <-> answers
@@ -277,7 +255,7 @@ def answer_widget_keys(config: SurveyConfig) -> list[str]:
         "comments",
         "confidence",
     ]
-    for server in assigned_servers(config):
+    for server in config.enabled_servers:
         keys += [impact_key(server, tool.name) for tool in server.tools]
         keys += [sensitivity_key(server, asset.name) for asset in server.assets]
         keys += [blast_key(server, asset, tool) for asset, tool in server.live_blast_cells]
@@ -309,12 +287,11 @@ def collect_answers(config: SurveyConfig) -> dict:
         "ambiguity_notes": state.get("ambiguity_notes", ""),
         "comments": state.get("comments", ""),
         "confidence": state.get("confidence"),
-        "assigned_servers": list(state.get("assigned", [])),
         "impact": {},
         "sensitivity": {},
         "blast": {},
     }
-    for server in assigned_servers(config):
+    for server in config.enabled_servers:
         answers["impact"][server.key] = {
             tool.name: state.get(impact_key(server, tool.name)) for tool in server.tools
         }
@@ -331,37 +308,10 @@ def collect_answers(config: SurveyConfig) -> dict:
 # ------------------------------------------------------------------- navigation
 
 
-def assigned_servers(config: SurveyConfig) -> list[Server]:
-    """The servers this participant was given. Empty until they start."""
-    keys = st.session_state.get("assigned", [])
-    by_key = {server.key: server for server in config.enabled_servers}
-    return [by_key[key] for key in keys if key in by_key]
-
-
-def assign_servers(config: SurveyConfig) -> None:
-    """Give this participant a balanced subset of the servers, once per session.
-
-    Counts come from the responses already stored, so coverage evens out as the
-    study runs. If the backend cannot be read we fall back to an unweighted draw
-    rather than blocking the participant - a slightly lumpy assignment beats a
-    survey that will not start.
-    """
-    if st.session_state.get("assigned"):
-        return
-    try:
-        counts = build_storage(st.secrets, responses_csv_path()).server_counts()
-    except Exception:
-        counts = {}
-    chosen = choose_servers(
-        config.enabled_servers, counts, config.servers_per_participant
-    )
-    st.session_state.assigned = [server.key for server in chosen]
-
-
 def pages(config: SurveyConfig) -> list[tuple[str, Server | None]]:
-    """Ordered wizard pages: intro, then three steps per assigned server, then feedback."""
+    """Ordered wizard pages: intro, then three steps per server, then feedback."""
     plan: list[tuple[str, Server | None]] = [("intro", None)]
-    for server in assigned_servers(config):
+    for server in config.enabled_servers:
         plan += [(step, server) for step in STEPS]
     plan.append(("feedback", None))
     return plan
@@ -405,11 +355,6 @@ def go_next(config: SurveyConfig) -> None:
     st.session_state.problems = problems
     if problems:
         return
-    if kind == "intro":
-        # Assign before advancing, so the page plan below already includes the
-        # participant's servers.
-        assign_servers(config)
-        plan = pages(config)
     if st.session_state.page == len(plan) - 1:
         submit(config)
     else:
@@ -629,34 +574,10 @@ def render_intro(config: SurveyConfig) -> None:
         st.checkbox(config.consent, key="consent")
 
 
-# Which context each step needs. Tool Impact is a judgement about the tool itself,
-# so the organisation is a distraction there; Asset Sensitivity is entirely about
-# what the data means to this organisation; Blast Radius needs both, since it is
-# the reach of a tool over an asset.
-STEP_CONTEXT = {
-    "impact": ("mcp",),
-    "sensitivity": ("org",),
-    "blast": ("mcp", "org"),
-}
-CONTEXT_LABELS = {"mcp": "About this MCP server", "org": "About this organization"}
-
-
-def render_context(server: Server, step: str) -> None:
-    for kind in STEP_CONTEXT[step]:
-        text = server.mcp_context if kind == "mcp" else server.scenario
-        if not text:
-            continue
-        with st.container(border=True):
-            st.markdown(
-                f'<div class="question-title"><b>{server.title} MCP — '
-                f'{CONTEXT_LABELS[kind]}</b></div>',
-                unsafe_allow_html=True,
-            )
-            st.write(text)
-
-
 def render_step(config: SurveyConfig, server: Server, step: str) -> None:
-    render_context(server, step)
+    with st.container(border=True):
+        st.markdown(f'<div class="question-title"><b>{server.title} MCP</b></div>', unsafe_allow_html=True)
+        st.write(server.scenario)
 
     st.markdown(f"#### {STEP_TITLES[step]}")
     st.write(config.step_prompts[step])
@@ -813,19 +734,9 @@ def main() -> None:
         return
 
     plan = pages(config)
-    # An assignment can shrink the plan (or be missing on a restored session);
-    # never index past the end.
-    index = min(st.session_state.page, len(plan) - 1)
-    st.session_state.page = index
+    index = st.session_state.page
     kind, server = plan[index]
-    # Before assignment the plan is just intro + feedback, which would tell the
-    # participant there are 2 sections when there will be 8. Project the real total.
-    if st.session_state.get("assigned"):
-        total = len(plan)
-    else:
-        per = min(config.servers_per_participant, len(config.enabled_servers))
-        total = 2 + len(STEPS) * per
-    st.progress((index + 1) / total, text=f"Section {index + 1} of {total}")
+    st.progress((index + 1) / len(plan), text=f"Section {index + 1} of {len(plan)}")
 
     if kind == "intro":
         render_intro(config)

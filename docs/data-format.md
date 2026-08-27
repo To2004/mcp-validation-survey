@@ -22,7 +22,6 @@ feedback.
 | `email` | Optional, blank if not given |
 | `familiarity_llm_agents`, `familiarity_mcp` | 1–5 self-report |
 | `consent` | `yes` or `no` |
-| `assigned_servers` | which servers this participant rated, e.g. `calendar\|slack` |
 | `duration_seconds` | Wall-clock time from first page load to submit |
 | `ambiguity_notes`, `comments` | Free text |
 | `confidence` | 1–5 overall self-rated confidence |
@@ -56,28 +55,8 @@ Participants only score live pairs, all of which are required.
 participant judgement — so it carries no agreement signal. Exclude those cells when
 comparing human and scanner blast scores.
 
-**Each participant rates only some of the servers.** Every rating for a server they
-were not assigned is blank. Read `assigned_servers` before treating a blank as
-missing data — within an assigned server, every rating is required, so a blank there
-would mean the row came from an older version of the app.
-
-The long export contains records only for assigned servers, so it needs no such care.
-
-### How servers are assigned
-
-Each participant gets `servers_per_participant` (currently 2) of the five, chosen
-**least-covered-first with random tie-breaking** rather than uniformly at random.
-Coverage therefore stays within one of even at every point in the study, while an
-individual participant still cannot predict their pair. If the storage backend cannot
-be read at that moment, the app falls back to an unweighted draw rather than blocking
-the participant.
-
-To check coverage mid-study:
-
-```sql
-select unnest(string_to_array(assigned_servers, '|')) as server, count(*) as participants
-from responses group by 1 order by 2 desc;
-```
+Every rating in the survey is required, so blank rating cells should not occur. A
+blank can only mean the row was written by an older version of the app.
 
 ## Long export — one row per rating
 

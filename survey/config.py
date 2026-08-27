@@ -51,8 +51,7 @@ class Server:
     key: str
     title: str
     enabled: bool
-    scenario: str      # what this deployment means to the organisation
-    mcp_context: str   # what the server itself exposes, independent of any org
+    scenario: str
     tools: tuple[Item, ...]
     assets: tuple[Item, ...]
     blast_tools: tuple[str, ...]
@@ -86,7 +85,6 @@ class SurveyConfig:
     scales: dict[str, tuple[Level, ...]]
     step_prompts: dict[str, str]
     servers: tuple[Server, ...]
-    servers_per_participant: int
 
     @property
     def enabled_servers(self) -> tuple[Server, ...]:
@@ -170,7 +168,6 @@ def _parse_server(raw: dict[str, Any]) -> Server:
         title=_require(raw, "title", where),
         enabled=bool(raw.get("enabled", True)),
         scenario=raw.get("scenario", ""),
-        mcp_context=raw.get("mcp_context", ""),
         tools=tools,
         assets=assets,
         blast_tools=blast_tools,
@@ -197,10 +194,6 @@ def load_config_from_dict(raw: dict[str, Any]) -> SurveyConfig:
     if not any(server.enabled for server in servers):
         raise ConfigError("config: at least one enabled server is required")
 
-    per_participant = int(raw.get("servers_per_participant", len(servers)))
-    if per_participant < 1:
-        raise ConfigError("config: servers_per_participant must be at least 1")
-
     return SurveyConfig(
         title=raw["title"],
         subtitle=raw["subtitle"],
@@ -209,7 +202,6 @@ def load_config_from_dict(raw: dict[str, Any]) -> SurveyConfig:
         scales=scales,
         step_prompts=prompts,
         servers=servers,
-        servers_per_participant=per_participant,
     )
 
 
