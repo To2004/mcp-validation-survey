@@ -41,12 +41,12 @@
       {
         "value": 2,
         "label": "Routine",
-        "meaning": "Low-value internal material. If it leaked, you would shrug."
+        "meaning": "Low-sensitivity internal information. Limited impact if it gets out."
       },
       {
         "value": 3,
         "label": "Internal",
-        "meaning": "Meant to stay in-house. A leak is disruptive and embarrassing, but you recover from it."
+        "meaning": "Sensitive internal information. If it leaks it could cause operational or reputational harm, but you can generally recover."
       },
       {
         "value": 4,
@@ -127,32 +127,32 @@
       ],
       "assets": [
         {
-          "name": "aurora-team",
-          "desc": "Ordinary operations-team scheduling."
+          "name": "team-calendar",
+          "desc": "The shared calendar an ordinary team uses to book its meetings."
         },
         {
           "name": "event-records",
-          "desc": "Whatever a create or delete targets — any event on any calendar in scope."
+          "desc": "Whatever event a create or delete acts on — any event on any calendar in reach."
         },
         {
-          "name": "aurora-crew-roster",
-          "desc": "Crew duty periods and standby blocks — the roster flight operations runs on."
+          "name": "crew-roster",
+          "desc": "When each pilot and cabin crew member is working, on standby, or resting. Flights are planned around it, and there are legal limits on how much anyone may work."
         },
         {
-          "name": "aurora-exec",
-          "desc": "The officer calendar: board sessions, fleet-order and route decisions."
+          "name": "exec-calendar",
+          "desc": "The bosses' calendar: board meetings, and decisions about buying aircraft and opening new routes. Much of it is secret until the airline announces it."
         },
         {
-          "name": "aurora-maintenance",
-          "desc": "Hangar checks and aircraft-on-ground windows."
+          "name": "maintenance-schedule",
+          "desc": "When each aircraft goes into the hangar for checks, and how long it is out of service."
         },
         {
-          "name": "aurora-regulatory",
-          "desc": "Regulator audits and certification inspections."
+          "name": "regulator-visits",
+          "desc": "Audits and inspections by the aviation authority — the people who can stop the airline flying."
         },
         {
           "name": "holidays",
-          "desc": "The subscribed public holiday calendar."
+          "desc": "The public holiday calendar everyone subscribes to. Anyone can see it."
         }
       ],
       "blast": {
@@ -165,60 +165,60 @@
         ],
         "assets": [
           {
-            "name": "aurora-team",
-            "desc": "Ordinary operations-team scheduling."
+            "name": "team-calendar",
+            "desc": "The shared calendar an ordinary team uses to book its meetings."
           },
           {
             "name": "event-records",
-            "desc": "Whatever a create or delete targets — any event on any calendar in scope."
+            "desc": "Whatever event a create or delete acts on — any event on any calendar in reach."
           },
           {
-            "name": "aurora-crew-roster",
-            "desc": "Crew duty periods and standby blocks — the roster flight operations runs on."
+            "name": "crew-roster",
+            "desc": "When each pilot and cabin crew member is working, on standby, or resting. Flights are planned around it, and there are legal limits on how much anyone may work."
           },
           {
-            "name": "aurora-exec",
-            "desc": "The officer calendar: board sessions, fleet-order and route decisions."
+            "name": "exec-calendar",
+            "desc": "The bosses' calendar: board meetings, and decisions about buying aircraft and opening new routes. Much of it is secret until the airline announces it."
           },
           {
-            "name": "aurora-maintenance",
-            "desc": "Hangar checks and aircraft-on-ground windows."
+            "name": "maintenance-schedule",
+            "desc": "When each aircraft goes into the hangar for checks, and how long it is out of service."
           },
           {
-            "name": "aurora-regulatory",
-            "desc": "Regulator audits and certification inspections."
+            "name": "regulator-visits",
+            "desc": "Audits and inspections by the aviation authority — the people who can stop the airline flying."
           },
           {
             "name": "holidays",
-            "desc": "The subscribed public holiday calendar."
+            "desc": "The public holiday calendar everyone subscribes to. Anyone can see it."
           }
         ],
         "live": [
-          "aurora-crew-roster|create-event",
-          "aurora-crew-roster|delete-event",
-          "aurora-crew-roster|get-event",
-          "aurora-crew-roster|list-events",
-          "aurora-crew-roster|search-events",
-          "aurora-exec|create-event",
-          "aurora-exec|delete-event",
-          "aurora-exec|get-event",
-          "aurora-exec|list-events",
-          "aurora-exec|search-events",
-          "aurora-maintenance|create-event",
-          "aurora-maintenance|delete-event",
-          "aurora-maintenance|get-event",
-          "aurora-maintenance|list-events",
-          "aurora-maintenance|search-events",
-          "aurora-regulatory|create-event",
-          "aurora-regulatory|delete-event",
-          "aurora-regulatory|get-event",
-          "aurora-regulatory|list-events",
-          "aurora-regulatory|search-events",
-          "aurora-team|create-event",
-          "aurora-team|delete-event",
-          "aurora-team|get-event",
-          "aurora-team|list-events",
-          "aurora-team|search-events",
+          "crew-roster|create-event",
+          "crew-roster|delete-event",
+          "crew-roster|get-event",
+          "crew-roster|list-events",
+          "crew-roster|search-events",
+          "exec-calendar|create-event",
+          "exec-calendar|delete-event",
+          "exec-calendar|get-event",
+          "exec-calendar|list-events",
+          "exec-calendar|search-events",
+          "maintenance-schedule|create-event",
+          "maintenance-schedule|delete-event",
+          "maintenance-schedule|get-event",
+          "maintenance-schedule|list-events",
+          "maintenance-schedule|search-events",
+          "regulator-visits|create-event",
+          "regulator-visits|delete-event",
+          "regulator-visits|get-event",
+          "regulator-visits|list-events",
+          "regulator-visits|search-events",
+          "team-calendar|create-event",
+          "team-calendar|delete-event",
+          "team-calendar|get-event",
+          "team-calendar|list-events",
+          "team-calendar|search-events",
           "event-records|create-event",
           "event-records|delete-event",
           "event-records|get-event",
@@ -264,32 +264,32 @@
       ],
       "assets": [
         {
-          "name": "helios-market-bidding-engine",
-          "desc": "Day-ahead and intraday bidding strategy, and the settlement code behind it."
+          "name": "market-bidding-engine",
+          "desc": "The code that decides what price the company offers to sell electricity at, and works out what it gets paid."
         },
         {
-          "name": "helios-grid-infra-config",
-          "desc": "Deployment configuration inside the CIP electronic security perimeter."
+          "name": "infra-config",
+          "desc": "The settings that decide how software is installed onto the protected part of the grid network."
         },
         {
-          "name": "helios-scada-gateway",
-          "desc": "The control-room to field-equipment protocol gateway — a system the grid itself runs on."
+          "name": "scada-gateway",
+          "desc": "The software connecting the control room to the equipment out on the power grid. It is how electricity actually gets switched on and off."
         },
         {
           "name": "pull-requests-and-reviews",
-          "desc": "The change-control gate itself, carrying code that has not been merged yet."
+          "desc": "Proposed changes to the code, waiting to be checked and approved. The approval step is the safety gate before anything reaches the grid."
         },
         {
-          "name": "helios-ot-runbooks",
-          "desc": "Switching procedures, patch windows, and the evidence kept for regulators."
+          "name": "operations-runbooks",
+          "desc": "Step-by-step instructions for switching power around and updating systems, plus the records regulators ask to see."
         },
         {
           "name": "pull-request-records",
-          "desc": "Whatever a pull-request write creates or merges."
+          "desc": "Whatever a proposed change creates or merges into the code."
         },
         {
-          "name": "helios-public-site",
-          "desc": "The public website and network status pages."
+          "name": "public-site",
+          "desc": "The company's public website and its network status page."
         }
       ],
       "blast": {
@@ -303,63 +303,63 @@
         ],
         "assets": [
           {
-            "name": "helios-market-bidding-engine",
-            "desc": "Day-ahead and intraday bidding strategy, and the settlement code behind it."
+            "name": "market-bidding-engine",
+            "desc": "The code that decides what price the company offers to sell electricity at, and works out what it gets paid."
           },
           {
-            "name": "helios-grid-infra-config",
-            "desc": "Deployment configuration inside the CIP electronic security perimeter."
+            "name": "infra-config",
+            "desc": "The settings that decide how software is installed onto the protected part of the grid network."
           },
           {
-            "name": "helios-scada-gateway",
-            "desc": "The control-room to field-equipment protocol gateway — a system the grid itself runs on."
+            "name": "scada-gateway",
+            "desc": "The software connecting the control room to the equipment out on the power grid. It is how electricity actually gets switched on and off."
           },
           {
             "name": "pull-requests-and-reviews",
-            "desc": "The change-control gate itself, carrying code that has not been merged yet."
+            "desc": "Proposed changes to the code, waiting to be checked and approved. The approval step is the safety gate before anything reaches the grid."
           },
           {
-            "name": "helios-ot-runbooks",
-            "desc": "Switching procedures, patch windows, and the evidence kept for regulators."
+            "name": "operations-runbooks",
+            "desc": "Step-by-step instructions for switching power around and updating systems, plus the records regulators ask to see."
           },
           {
             "name": "pull-request-records",
-            "desc": "Whatever a pull-request write creates or merges."
+            "desc": "Whatever a proposed change creates or merges into the code."
           },
           {
-            "name": "helios-public-site",
-            "desc": "The public website and network status pages."
+            "name": "public-site",
+            "desc": "The company's public website and its network status page."
           }
         ],
         "live": [
-          "helios-grid-infra-config|create_or_update_file",
-          "helios-grid-infra-config|create_pull_request",
-          "helios-grid-infra-config|create_pull_request_review",
-          "helios-grid-infra-config|get_pull_request_files",
-          "helios-grid-infra-config|list_pull_requests",
-          "helios-grid-infra-config|search_code",
-          "helios-market-bidding-engine|create_or_update_file",
-          "helios-market-bidding-engine|create_pull_request",
-          "helios-market-bidding-engine|create_pull_request_review",
-          "helios-market-bidding-engine|get_pull_request_files",
-          "helios-market-bidding-engine|list_pull_requests",
-          "helios-market-bidding-engine|search_code",
-          "helios-ot-runbooks|create_or_update_file",
-          "helios-ot-runbooks|create_pull_request",
-          "helios-ot-runbooks|create_pull_request_review",
-          "helios-ot-runbooks|get_pull_request_files",
-          "helios-ot-runbooks|list_pull_requests",
-          "helios-ot-runbooks|search_code",
-          "helios-public-site|create_or_update_file",
-          "helios-public-site|create_pull_request",
-          "helios-public-site|list_pull_requests",
-          "helios-public-site|search_code",
-          "helios-scada-gateway|create_or_update_file",
-          "helios-scada-gateway|create_pull_request",
-          "helios-scada-gateway|create_pull_request_review",
-          "helios-scada-gateway|get_pull_request_files",
-          "helios-scada-gateway|list_pull_requests",
-          "helios-scada-gateway|search_code",
+          "infra-config|create_or_update_file",
+          "infra-config|create_pull_request",
+          "infra-config|create_pull_request_review",
+          "infra-config|get_pull_request_files",
+          "infra-config|list_pull_requests",
+          "infra-config|search_code",
+          "market-bidding-engine|create_or_update_file",
+          "market-bidding-engine|create_pull_request",
+          "market-bidding-engine|create_pull_request_review",
+          "market-bidding-engine|get_pull_request_files",
+          "market-bidding-engine|list_pull_requests",
+          "market-bidding-engine|search_code",
+          "operations-runbooks|create_or_update_file",
+          "operations-runbooks|create_pull_request",
+          "operations-runbooks|create_pull_request_review",
+          "operations-runbooks|get_pull_request_files",
+          "operations-runbooks|list_pull_requests",
+          "operations-runbooks|search_code",
+          "public-site|create_or_update_file",
+          "public-site|create_pull_request",
+          "public-site|list_pull_requests",
+          "public-site|search_code",
+          "scada-gateway|create_or_update_file",
+          "scada-gateway|create_pull_request",
+          "scada-gateway|create_pull_request_review",
+          "scada-gateway|get_pull_request_files",
+          "scada-gateway|list_pull_requests",
+          "scada-gateway|search_code",
           "pull-request-records|create_pull_request",
           "pull-request-records|create_pull_request_review",
           "pull-request-records|get_pull_request_files",
@@ -406,32 +406,32 @@
       ],
       "assets": [
         {
-          "name": "vireo-eng-platform",
-          "desc": "Ordinary engineering traffic about the trial-data platform."
+          "name": "eng-platform",
+          "desc": "Everyday chat between the engineers who build the system the trial data is collected in."
         },
         {
-          "name": "vireo-lab-informatics",
-          "desc": "Lab data, assay quality control, and biostatistics discussion."
+          "name": "lab-and-statistics",
+          "desc": "Chat about lab results, checks that the tests are working properly, and the statistics being run on the trial."
         },
         {
-          "name": "vireo-regulatory-fda",
-          "desc": "Coordination and correspondence with the regulatory agency."
+          "name": "regulator-correspondence",
+          "desc": "Messages about what the company is submitting to the medicines regulator, and what the regulator says back."
         },
         {
-          "name": "vireo-safety-pv",
-          "desc": "Serious adverse events, including identifiers of the patients involved."
+          "name": "patient-safety-reports",
+          "desc": "Reports of patients being harmed during the trial, including details identifying the patient."
         },
         {
-          "name": "vireo-trial-ops",
-          "desc": "Site activation, enrolment, protocol deviations and holds."
+          "name": "trial-operations",
+          "desc": "Running the trial day to day: opening new hospital sites, signing up patients, and problems with following the plan."
         },
         {
-          "name": "vireo-unblinding",
-          "desc": "Safety-board coordination and emergency requests to unblind a patient."
+          "name": "unblinding-requests",
+          "desc": "Requests to reveal whether a patient was given the real drug or a dummy one. This is deliberately kept secret, and is only revealed in an emergency — revealing it early ruins the trial."
         },
         {
-          "name": "vireo-announcements",
-          "desc": "The company-wide broadcast channel."
+          "name": "announcements",
+          "desc": "The channel where company-wide notices are posted. Everyone can read it."
         }
       ],
       "blast": {
@@ -445,76 +445,76 @@
         ],
         "assets": [
           {
-            "name": "vireo-eng-platform",
-            "desc": "Ordinary engineering traffic about the trial-data platform."
+            "name": "eng-platform",
+            "desc": "Everyday chat between the engineers who build the system the trial data is collected in."
           },
           {
-            "name": "vireo-lab-informatics",
-            "desc": "Lab data, assay quality control, and biostatistics discussion."
+            "name": "lab-and-statistics",
+            "desc": "Chat about lab results, checks that the tests are working properly, and the statistics being run on the trial."
           },
           {
-            "name": "vireo-regulatory-fda",
-            "desc": "Coordination and correspondence with the regulatory agency."
+            "name": "regulator-correspondence",
+            "desc": "Messages about what the company is submitting to the medicines regulator, and what the regulator says back."
           },
           {
-            "name": "vireo-safety-pv",
-            "desc": "Serious adverse events, including identifiers of the patients involved."
+            "name": "patient-safety-reports",
+            "desc": "Reports of patients being harmed during the trial, including details identifying the patient."
           },
           {
-            "name": "vireo-trial-ops",
-            "desc": "Site activation, enrolment, protocol deviations and holds."
+            "name": "trial-operations",
+            "desc": "Running the trial day to day: opening new hospital sites, signing up patients, and problems with following the plan."
           },
           {
-            "name": "vireo-unblinding",
-            "desc": "Safety-board coordination and emergency requests to unblind a patient."
+            "name": "unblinding-requests",
+            "desc": "Requests to reveal whether a patient was given the real drug or a dummy one. This is deliberately kept secret, and is only revealed in an emergency — revealing it early ruins the trial."
           },
           {
-            "name": "vireo-announcements",
-            "desc": "The company-wide broadcast channel."
+            "name": "announcements",
+            "desc": "The channel where company-wide notices are posted. Everyone can read it."
           }
         ],
         "live": [
-          "vireo-announcements|conversations_add_message",
-          "vireo-announcements|conversations_history",
-          "vireo-announcements|conversations_join",
-          "vireo-announcements|conversations_replies",
-          "vireo-announcements|conversations_search_messages",
-          "vireo-eng-platform|conversations_add_message",
-          "vireo-eng-platform|conversations_history",
-          "vireo-eng-platform|conversations_join",
-          "vireo-eng-platform|conversations_leave",
-          "vireo-eng-platform|conversations_replies",
-          "vireo-eng-platform|conversations_search_messages",
-          "vireo-lab-informatics|conversations_add_message",
-          "vireo-lab-informatics|conversations_history",
-          "vireo-lab-informatics|conversations_join",
-          "vireo-lab-informatics|conversations_leave",
-          "vireo-lab-informatics|conversations_replies",
-          "vireo-lab-informatics|conversations_search_messages",
-          "vireo-regulatory-fda|conversations_add_message",
-          "vireo-regulatory-fda|conversations_history",
-          "vireo-regulatory-fda|conversations_join",
-          "vireo-regulatory-fda|conversations_leave",
-          "vireo-regulatory-fda|conversations_replies",
-          "vireo-regulatory-fda|conversations_search_messages",
-          "vireo-safety-pv|conversations_add_message",
-          "vireo-safety-pv|conversations_history",
-          "vireo-safety-pv|conversations_join",
-          "vireo-safety-pv|conversations_leave",
-          "vireo-safety-pv|conversations_replies",
-          "vireo-safety-pv|conversations_search_messages",
-          "vireo-trial-ops|conversations_add_message",
-          "vireo-trial-ops|conversations_history",
-          "vireo-trial-ops|conversations_join",
-          "vireo-trial-ops|conversations_leave",
-          "vireo-trial-ops|conversations_replies",
-          "vireo-trial-ops|conversations_search_messages",
-          "vireo-unblinding|conversations_add_message",
-          "vireo-unblinding|conversations_history",
-          "vireo-unblinding|conversations_join",
-          "vireo-unblinding|conversations_leave",
-          "vireo-unblinding|conversations_replies",
-          "vireo-unblinding|conversations_search_messages"
+          "announcements|conversations_add_message",
+          "announcements|conversations_history",
+          "announcements|conversations_join",
+          "announcements|conversations_replies",
+          "announcements|conversations_search_messages",
+          "eng-platform|conversations_add_message",
+          "eng-platform|conversations_history",
+          "eng-platform|conversations_join",
+          "eng-platform|conversations_leave",
+          "eng-platform|conversations_replies",
+          "eng-platform|conversations_search_messages",
+          "lab-and-statistics|conversations_add_message",
+          "lab-and-statistics|conversations_history",
+          "lab-and-statistics|conversations_join",
+          "lab-and-statistics|conversations_leave",
+          "lab-and-statistics|conversations_replies",
+          "lab-and-statistics|conversations_search_messages",
+          "regulator-correspondence|conversations_add_message",
+          "regulator-correspondence|conversations_history",
+          "regulator-correspondence|conversations_join",
+          "regulator-correspondence|conversations_leave",
+          "regulator-correspondence|conversations_replies",
+          "regulator-correspondence|conversations_search_messages",
+          "patient-safety-reports|conversations_add_message",
+          "patient-safety-reports|conversations_history",
+          "patient-safety-reports|conversations_join",
+          "patient-safety-reports|conversations_leave",
+          "patient-safety-reports|conversations_replies",
+          "patient-safety-reports|conversations_search_messages",
+          "trial-operations|conversations_add_message",
+          "trial-operations|conversations_history",
+          "trial-operations|conversations_join",
+          "trial-operations|conversations_leave",
+          "trial-operations|conversations_replies",
+          "trial-operations|conversations_search_messages",
+          "unblinding-requests|conversations_add_message",
+          "unblinding-requests|conversations_history",
+          "unblinding-requests|conversations_join",
+          "unblinding-requests|conversations_leave",
+          "unblinding-requests|conversations_replies",
+          "unblinding-requests|conversations_search_messages"
         ]
       }
     },
@@ -553,31 +553,31 @@
       "assets": [
         {
           "name": "onboarding-material",
-          "desc": "Org charts and onboarding documents."
+          "desc": "Who-does-what charts and the documents new staff get on day one."
         },
         {
           "name": "project-material",
-          "desc": "Schemas, defect lists and working project documents."
+          "desc": "Working documents for projects: plans, lists of faults, notes."
         },
         {
           "name": "file-contents",
-          "desc": "Whatever a content read returns — it inherits the most sensitive file reached."
+          "desc": "Whatever a file read gives back. It is as sensitive as the most sensitive file the agent is able to open."
         },
         {
           "name": "product-source",
-          "desc": "The product logic that ships to production."
+          "desc": "The code that makes the product work — the version customers actually use."
         },
         {
           "name": "directory-records",
-          "desc": "Whatever a directory create or move targets."
+          "desc": "Whatever folder a create or move acts on."
         },
         {
           "name": "payroll-records",
-          "desc": "Compensation records — one row per employee, covering the whole staff."
+          "desc": "What every member of staff is paid, one row per person."
         },
         {
           "name": "directory-structure",
-          "desc": "The recursive tree of names and paths. No contents."
+          "desc": "The full tree of folder and file names. Names only — nothing about what is inside them."
         }
       ],
       "blast": {
@@ -592,31 +592,31 @@
         "assets": [
           {
             "name": "onboarding-material",
-            "desc": "Org charts and onboarding documents."
+            "desc": "Who-does-what charts and the documents new staff get on day one."
           },
           {
             "name": "project-material",
-            "desc": "Schemas, defect lists and working project documents."
+            "desc": "Working documents for projects: plans, lists of faults, notes."
           },
           {
             "name": "file-contents",
-            "desc": "Whatever a content read returns — it inherits the most sensitive file reached."
+            "desc": "Whatever a file read gives back. It is as sensitive as the most sensitive file the agent is able to open."
           },
           {
             "name": "product-source",
-            "desc": "The product logic that ships to production."
+            "desc": "The code that makes the product work — the version customers actually use."
           },
           {
             "name": "directory-records",
-            "desc": "Whatever a directory create or move targets."
+            "desc": "Whatever folder a create or move acts on."
           },
           {
             "name": "payroll-records",
-            "desc": "Compensation records — one row per employee, covering the whole staff."
+            "desc": "What every member of staff is paid, one row per person."
           },
           {
             "name": "directory-structure",
-            "desc": "The recursive tree of names and paths. No contents."
+            "desc": "The full tree of folder and file names. Names only — nothing about what is inside them."
           }
         ],
         "live": [
@@ -687,31 +687,31 @@
       "assets": [
         {
           "name": "api_keys",
-          "desc": "Stored service credentials — service, key and owner. One row is usable on its own against another system."
+          "desc": "Passwords the system uses to log in to other services. One of these on its own is enough to get into another system."
         },
         {
           "name": "datasets",
-          "desc": "Pre-publication research data and its provenance — name, description, classification, size, owner, created date."
+          "desc": "Research data that has not been published yet, and notes on where it came from."
         },
         {
           "name": "employees",
-          "desc": "Staff records, one row per person — name, email, role, department and salary."
+          "desc": "Staff records — name, email, job, department and salary."
         },
         {
           "name": "experiments",
-          "desc": "Internal lab activity — project, dataset, run label, start time, status and notes."
+          "desc": "A log of experiments that were run: which project, which data, when it started, and how it went."
         },
         {
           "name": "grants",
-          "desc": "Funding awards — sponsor, grant number, lead researcher, amount, dates and status."
+          "desc": "Money awarded to fund research: who gave it, how much, and for how long."
         },
         {
           "name": "projects",
-          "desc": "The internal project register — code, title, status, lead researcher and start date."
+          "desc": "The list of research projects — code, title, who leads it and when it started."
         },
         {
           "name": "publications",
-          "desc": "Published papers — title, venue, year, DOI and status. Already public."
+          "desc": "Papers the organisation has already published. Anyone can read them."
         }
       ],
       "blast": {
@@ -724,31 +724,31 @@
         "assets": [
           {
             "name": "api_keys",
-            "desc": "Stored service credentials — service, key and owner. One row is usable on its own against another system."
+            "desc": "Passwords the system uses to log in to other services. One of these on its own is enough to get into another system."
           },
           {
             "name": "datasets",
-            "desc": "Pre-publication research data and its provenance — name, description, classification, size, owner, created date."
+            "desc": "Research data that has not been published yet, and notes on where it came from."
           },
           {
             "name": "employees",
-            "desc": "Staff records, one row per person — name, email, role, department and salary."
+            "desc": "Staff records — name, email, job, department and salary."
           },
           {
             "name": "experiments",
-            "desc": "Internal lab activity — project, dataset, run label, start time, status and notes."
+            "desc": "A log of experiments that were run: which project, which data, when it started, and how it went."
           },
           {
             "name": "grants",
-            "desc": "Funding awards — sponsor, grant number, lead researcher, amount, dates and status."
+            "desc": "Money awarded to fund research: who gave it, how much, and for how long."
           },
           {
             "name": "projects",
-            "desc": "The internal project register — code, title, status, lead researcher and start date."
+            "desc": "The list of research projects — code, title, who leads it and when it started."
           },
           {
             "name": "publications",
-            "desc": "Published papers — title, venue, year, DOI and status. Already public."
+            "desc": "Papers the organisation has already published. Anyone can read them."
           }
         ],
         "live": [

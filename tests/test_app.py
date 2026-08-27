@@ -150,7 +150,7 @@ class TestRatingSteps:
         text = page_text(app)
         assert "Tool \ Virtual asset" in text
         # Column headers are the matrix assets; row headings are the tools.
-        for asset in ("aurora-exec", "aurora-crew-roster", "holidays"):
+        for asset in ("exec-calendar", "crew-roster", "holidays"):
             assert f'class="grid-head">{asset}<' in text
         for tool in ("list-events", "delete-event"):
             assert f"<b>{tool}</b>" in text
@@ -309,7 +309,7 @@ class TestServerAssignment:
             row = next(csv.DictReader(handle))
         assert row["impact__calendar__get-event"] == "3"
         assert row["impact__slack__conversations_history"] == ""
-        assert row["sens__github__helios-scada-gateway"] == ""
+        assert row["sens__github__scada-gateway"] == ""
 
     def test_assignment_balances_against_what_is_already_stored(self, tmp_path):
         """Servers already well covered should not be handed out again."""
@@ -391,7 +391,7 @@ class TestAnswersSurviveNavigation:
         app = set_ratings(click(app, "Next"), sensitivity_keys("calendar"), 2)
         app = click(app, "Next")  # now on the Blast Radius step
         assert app.session_state["impact__calendar__get-event"] == 5
-        assert app.session_state["sensitivity__calendar__aurora-exec"] == 2
+        assert app.session_state["sensitivity__calendar__exec-calendar"] == 2
 
 
 class TestSubmission:
@@ -418,7 +418,7 @@ class TestSubmission:
         assert rows[0]["consent"] == "yes"
         assert rows[0]["confidence"] == "5"
         assert rows[0]["impact__calendar__get-event"] == "3"
-        assert rows[0]["blast__calendar__aurora-team__list-events"] == "2"
+        assert rows[0]["blast__calendar__team-calendar__list-events"] == "2"
 
     def test_a_second_submission_appends_rather_than_overwriting(self, tmp_path):
         import csv

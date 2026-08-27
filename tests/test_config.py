@@ -154,7 +154,7 @@ class TestShippedConfig:
 
     def test_dead_pairs_are_marked_not_live(self, config):
         calendar = next(s for s in config.servers if s.key == "calendar")
-        assert calendar.is_live("aurora-team", "list-events")
+        assert calendar.is_live("team-calendar", "list-events")
         assert not calendar.is_live("holidays", "delete-event")
 
     def test_rejects_a_live_cell_outside_the_matrix(self):
