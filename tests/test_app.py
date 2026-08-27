@@ -137,11 +137,11 @@ class TestRatingSteps:
         app = set_ratings(click(app, "Next"), sensitivity_keys("calendar"), 3)
         app = click(app, "Next")
         cells = [b for b in app.selectbox if b.key and b.key.startswith("blast__calendar__")]
-        assert len(cells) == 16  # only the live pairs are rateable
+        assert len(cells) == 33  # only the live pairs are rateable
         assert all(cell.value is None for cell in cells)  # nothing preselected
         assert all("N/A" not in cell.options for cell in cells)
-        # The rest of the 6x5 grid is rendered read-only.
-        assert page_text(app).count('class="na-cell"') == 30 - 16
+        # The rest of the 5x7 grid is rendered read-only.
+        assert page_text(app).count('class="na-cell"') == 35 - 33
 
     def test_blast_matrix_is_laid_out_with_tools_as_rows_and_assets_as_columns(self):
         app = set_ratings(complete_intro(run_app()), impact_keys("calendar"), 3)
@@ -150,9 +150,9 @@ class TestRatingSteps:
         text = page_text(app)
         assert "Tool \ Virtual asset" in text
         # Column headers are the matrix assets; row headings are the tools.
-        for asset in ("executive", "recruiting", "free-busy-availability"):
+        for asset in ("aurora-exec", "aurora-crew-roster", "holidays"):
             assert f'class="grid-head">{asset}<' in text
-        for tool in ("list-calendars", "delete-event"):
+        for tool in ("list-events", "delete-event"):
             assert f"<b>{tool}</b>" in text
         # get-current-time acts on no asset, so it has no row at all.
         assert "<b>get-current-time</b>" not in text
@@ -169,7 +169,7 @@ class TestRatingSteps:
         app = set_ratings(complete_intro(run_app()), impact_keys("calendar"), 3)
         app = set_ratings(click(app, "Next"), sensitivity_keys("calendar"), 3)
         app = click(click(app, "Next"), "Next")
-        assert "16 of 16 tool/asset cells are not yet rated" in errors(app)
+        assert "33 of 33 tool/asset cells are not yet rated" in errors(app)
 
     def test_scoring_only_some_blast_cells_still_blocks(self):
         app = set_ratings(complete_intro(run_app()), impact_keys("calendar"), 3)
@@ -177,7 +177,7 @@ class TestRatingSteps:
         app = click(app, "Next")
         next(b for b in app.selectbox if b.key.startswith("blast__calendar__")).set_value("4")
         app = click(app.run(), "Next")
-        assert "15 of 16 tool/asset cells are not yet rated" in errors(app)
+        assert "32 of 33 tool/asset cells are not yet rated" in errors(app)
         assert app.session_state["page"] == 3
 
     def test_scoring_every_blast_cell_unblocks_the_step(self):
@@ -222,17 +222,25 @@ class TestStepContext:
         assert "About this MCP server" in text
         assert "About this organization" in text
 
-    def test_the_org_text_keeps_the_source_form_wording(self):
-        # A short description of CBG now leads the organisational context, since the
-        # step asks how sensitive an asset is *to this organization* and CBG was
-        # otherwise never explained. The source form's wording follows it intact.
-        server = next(s for s in CONFIG.enabled_servers if s.key == "calendar")
-        assert server.scenario.startswith("**CBG — Consolidated Business Group**")
-        assert "CBG's workplace-services team runs the agent" in server.scenario
-
-    def test_every_server_says_who_the_organisation_is(self):
+    def test_each_server_names_and_explains_its_organisation(self):
+        expected = {
+            "calendar": "Aurora Airways",
+            "github": "Helios Grid",
+            "slack": "Vireo Bio",
+            "filesystem": "CBG",
+            "sqlite": "CBG",
+        }
         for server in CONFIG.enabled_servers:
-            assert "Consolidated Business Group" in server.scenario, server.key
+            assert expected[server.key] in server.scenario, server.key
+            # explained, not merely named
+            assert len(server.scenario) > 200, server.key
+
+    def test_the_mcp_text_explains_the_system_before_the_server(self):
+        # Tool Impact is judged from what the underlying system is, so the
+        # context describes Google Calendar / GitHub / Slack first, then what
+        # this MCP exposes of it.
+        for server in CONFIG.enabled_servers:
+            assert "This MCP server puts" in server.mcp_context, server.key
 
     def test_the_mcp_text_does_not_name_the_organisation(self):
         for server in CONFIG.enabled_servers:
@@ -300,8 +308,8 @@ class TestServerAssignment:
         with csv_path.open(encoding="utf-8", newline="") as handle:
             row = next(csv.DictReader(handle))
         assert row["impact__calendar__get-event"] == "3"
-        assert row["impact__slack__channels_list"] == ""
-        assert row["sens__github__internal-docs"] == ""
+        assert row["impact__slack__conversations_history"] == ""
+        assert row["sens__github__helios-scada-gateway"] == ""
 
     def test_assignment_balances_against_what_is_already_stored(self, tmp_path):
         """Servers already well covered should not be handed out again."""
@@ -343,13 +351,29 @@ class TestRatingButtons:
         assert selected.proto.type == "primary"
         assert app.button(key=f"{key}__opt2").proto.type == "secondary"
 
-    def test_every_rating_row_offers_five_buttons(self):
+    def test_every_rating_row_offers_five_levels_and_not_sure(self):
         app = complete_intro(run_app())
         keys = {b.key.rsplit("__opt", 1)[0] for b in app.button if b.key and "__opt" in b.key}
         assert keys == set(impact_keys("calendar"))
         for key in keys:
-            present = [b for b in app.button if b.key and b.key.startswith(f"{key}__opt")]
-            assert len(present) == 5, key
+            present = {b.key.rsplit("__opt", 1)[1] for b in app.button
+                       if b.key and b.key.startswith(f"{key}__opt")}
+            assert present == {"1", "2", "3", "4", "5", "unsure"}, key
+
+    def test_not_sure_is_recorded_as_an_answer(self):
+        app = complete_intro(run_app())
+        key = impact_keys("calendar")[0]
+        app = app.button(key=f"{key}__optunsure").click().run()
+        assert app.session_state[key] == "unsure"
+
+    def test_not_sure_counts_as_answered(self):
+        # A participant who cannot judge an item should not be blocked.
+        app = complete_intro(run_app())
+        for key in impact_keys("calendar"):
+            app.session_state[key] = "unsure"
+        app = click(app.run(), "Next")
+        assert not app.exception
+        assert app.session_state["page"] == 2
 
 
 class TestAnswersSurviveNavigation:
@@ -367,7 +391,7 @@ class TestAnswersSurviveNavigation:
         app = set_ratings(click(app, "Next"), sensitivity_keys("calendar"), 2)
         app = click(app, "Next")  # now on the Blast Radius step
         assert app.session_state["impact__calendar__get-event"] == 5
-        assert app.session_state["sensitivity__calendar__executive"] == 2
+        assert app.session_state["sensitivity__calendar__aurora-exec"] == 2
 
 
 class TestSubmission:
@@ -394,7 +418,7 @@ class TestSubmission:
         assert rows[0]["consent"] == "yes"
         assert rows[0]["confidence"] == "5"
         assert rows[0]["impact__calendar__get-event"] == "3"
-        assert rows[0]["blast__calendar__executive__get-event"] == "2"
+        assert rows[0]["blast__calendar__aurora-team__list-events"] == "2"
 
     def test_a_second_submission_appends_rather_than_overwriting(self, tmp_path):
         import csv

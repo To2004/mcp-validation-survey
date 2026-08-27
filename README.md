@@ -11,7 +11,9 @@ an account.
 
 * Renders the survey as a Google-Forms-style wizard — one section per screen, with a
   progress bar, per-section validation, and Back/Next navigation.
-* Covers five MCP servers (Google Calendar, GitHub, Slack, Filesystem, SQL Database),
+* Covers five MCP servers across four organisations — Google Calendar at Aurora
+  Airways, GitHub at Helios Grid, Slack at Vireo Bio, and a file share and SQL
+  database at CBG —
   each with three scoring steps: **Tool Impact**, **Asset Sensitivity** and **Blast
   Radius**. Each participant is assigned **2 of the 5**, balanced so coverage stays
   even across the study — set `servers_per_participant` in `survey_config.json`.

@@ -43,8 +43,8 @@ name that would break this.
 
 | Dimension | Values |
 | --- | --- |
-| Tool Impact | 1–5 (Liveness to Irreversible) |
-| Asset Sensitivity | 1–5 (Public to Critical) |
+| Tool Impact | 1–5 (No effect to Destructive or executing action), or `unsure` |
+| Asset Sensitivity | 1–5 (Public to Crown jewel), or `unsure` |
 | Blast Radius | 1–5 (Negligible to Systemic) |
 
 Blast Radius cells can also hold `N/A`, but participants never choose it. The matrix is

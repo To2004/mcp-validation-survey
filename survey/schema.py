@@ -24,6 +24,10 @@ from survey.assignment import format_assigned, parse_assigned
 from survey.config import COLUMN_SEPARATOR, Server, SurveyConfig
 
 NOT_APPLICABLE = "N/A"
+# A participant who cannot judge an item says so, rather than guessing. This is an
+# answer in its own right: a tool or asset that many people cannot place is a
+# finding about the definitions, which a forced guess would hide.
+UNSURE = "unsure"
 
 METADATA_COLUMNS = (
     "submission_id",
@@ -69,9 +73,11 @@ def csv_columns(config: SurveyConfig) -> list[str]:
 
 
 def _rating(value: Any) -> Any:
-    """Normalise a rating to an int, or empty string when unanswered."""
+    """Normalise a rating to an int, "unsure", or empty string when unanswered."""
     if value is None or value == "":
         return ""
+    if value == UNSURE:
+        return UNSURE
     return int(value)
 
 

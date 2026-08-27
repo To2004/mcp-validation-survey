@@ -24,6 +24,7 @@ import streamlit as st
 from survey.assignment import choose_servers, format_assigned, parse_assigned
 from survey.config import ConfigError, Server, SurveyConfig, lint, load_config
 from survey.schema import (
+    UNSURE,
     csv_columns,
     long_format_rows,
     missing_required,
@@ -48,6 +49,7 @@ SCALE_LABELS = {
 }
 BLAST_OPTIONS = ["1", "2", "3", "4", "5"]
 RATING_LABEL_WIDTH = 3.2
+UNSURE_WIDTH = 1.5
 RATING_OPTIONS = [1, 2, 3, 4, 5]
 
 FORM_CSS = """
@@ -477,19 +479,25 @@ def rating_cells(key: str, levels) -> None:
             )
 
 
-def scale_header(levels, first_column_label: str = "") -> None:
+def grid_widths(levels) -> list:
+    """Label column, one column per level, then the Not sure column."""
+    return [RATING_LABEL_WIDTH] + [1] * len(levels) + [UNSURE_WIDTH]
+
+
+def scale_header(levels, first_column_label: str) -> None:
     """Header row for a rating grid: the numbers, with both ends named."""
-    columns = st.columns([RATING_LABEL_WIDTH] + [1] * len(levels)) if first_column_label else st.columns(len(levels))
-    if first_column_label:
-        columns[0].markdown(
-            f'<div class="grid-head">{first_column_label}</div>', unsafe_allow_html=True
-        )
-        columns = columns[1:]
-    for column, level in zip(columns, levels):
+    columns = st.columns(grid_widths(levels))
+    columns[0].markdown(
+        f'<div class="grid-head">{first_column_label}</div>', unsafe_allow_html=True
+    )
+    for column, level in zip(columns[1:], levels):
         anchor = f"<small>{level.label}</small>" if level.value in (1, len(levels)) else ""
         column.markdown(
             f'<div class="scale-num">{level.value}{anchor}</div>', unsafe_allow_html=True
         )
+    columns[-1].markdown(
+        '<div class="scale-num">?<small>not sure</small></div>', unsafe_allow_html=True
+    )
 
 
 HOWTO = {
@@ -497,12 +505,14 @@ HOWTO = {
         "<b>How to answer:</b> each row is one tool. Click one number per row — the "
         "column number is the Tool Impact level. Open <i>Tool Impact levels</i> above "
         "for the definitions. Judge each tool on its own, not against the others; "
-        "levels may repeat."
+        "levels may repeat. If you cannot judge one, click <b>Not sure</b> rather than "
+        "guessing."
     ),
     "sensitivity": (
         "<b>How to answer:</b> each row is one virtual asset. Click one number per row "
         "— the column number is the Asset Sensitivity level. Judge each asset on its "
-        "own; levels may repeat."
+        "own; levels may repeat. If you cannot judge one, click <b>Not sure</b> rather "
+        "than guessing."
     ),
     "blast": (
         "<b>How to answer:</b> each row is a tool, each column a virtual asset. Choose "
@@ -529,7 +539,7 @@ def scale_reference(config: SurveyConfig, dimension: str) -> None:
 def radio_grid(config: SurveyConfig, dimension: str, server: Server, items, key_fn, noun: str) -> None:
     """One table: a row per item, five rating columns, header and rows sharing a spec."""
     levels = config.scales[dimension]
-    widths = [RATING_LABEL_WIDTH] + [1] * len(levels)
+    widths = grid_widths(levels)
 
     with st.container(border=True):
         scale_header(levels, noun)
@@ -553,6 +563,17 @@ def radio_grid(config: SurveyConfig, dimension: str, server: Server, items, key_
                         args=(key, level.value),
                         use_container_width=True,
                     )
+            # "Not sure" is a real answer, not a skip: a participant who cannot
+            # judge an item tells us something a forced guess would hide.
+            with row[-1]:
+                st.button(
+                    "Not sure",
+                    key=f"{key}__opt{UNSURE}",
+                    type="primary" if current == UNSURE else "secondary",
+                    on_click=set_rating,
+                    args=(key, UNSURE),
+                    use_container_width=True,
+                )
 
 
 def blast_matrix(server: Server) -> None:

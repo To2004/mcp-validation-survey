@@ -114,12 +114,15 @@ class TestShippedConfig:
             s.key: (len(s.tools), len(s.assets), len(s.blast_assets), len(s.blast_tools))
             for s in config.servers
         }
+        # (tools, assets, blast assets, blast tools). Blast tools can be fewer
+        # than tools: a tool reaching none of the chosen assets stays in Tool
+        # Impact but would contribute a row of nothing but N/A to the matrix.
         assert shapes == {
-            "calendar": (7, 6, 5, 6),  # get-current-time acts on nothing, so it is not in the matrix
-            "github": (7, 6, 5, 7),
-            "slack": (7, 6, 5, 7),
-            "filesystem": (7, 6, 5, 7),
-            "sqlite": (5, 6, 5, 5),
+            "calendar": (6, 7, 7, 5),
+            "github": (6, 7, 7, 6),
+            "slack": (6, 7, 7, 6),
+            "filesystem": (6, 7, 7, 6),
+            "sqlite": (5, 7, 7, 4),
         }
 
     def test_no_researcher_key_material_leaked_into_the_config(self):
@@ -136,16 +139,23 @@ class TestShippedConfig:
         ):
             assert forbidden not in text
 
-    def test_live_cells_are_a_strict_subset_of_the_matrix(self, config):
+    def test_live_cells_are_a_subset_of_the_matrix(self, config):
+        # A server whose every pair is live is fine - SQL Database is one - so this
+        # asserts containment, not strict containment.
         for server in config.servers:
             assert server.blast_live
             assert set(server.live_blast_cells) <= set(server.blast_cells)
-            assert len(server.live_blast_cells) < len(server.blast_cells)
+
+    def test_most_of_each_matrix_is_answerable(self, config):
+        # A grid that is mostly N/A wastes the screen and teaches nothing.
+        for server in config.servers:
+            live = len(server.live_blast_cells) / len(server.blast_cells)
+            assert live >= 0.7, (server.key, round(live, 2))
 
     def test_dead_pairs_are_marked_not_live(self, config):
         calendar = next(s for s in config.servers if s.key == "calendar")
-        assert calendar.is_live("executive", "get-event")
-        assert not calendar.is_live("free-busy-availability", "delete-event")
+        assert calendar.is_live("aurora-team", "list-events")
+        assert not calendar.is_live("holidays", "delete-event")
 
     def test_rejects_a_live_cell_outside_the_matrix(self):
         raw = minimal()
