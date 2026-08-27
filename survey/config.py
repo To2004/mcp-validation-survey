@@ -87,6 +87,8 @@ class SurveyConfig:
     step_prompts: dict[str, str]
     servers: tuple[Server, ...]
     servers_per_participant: int
+    scale_labels: dict[str, str]
+    scale_rules: dict[str, tuple[str, ...]]
 
     @property
     def enabled_servers(self) -> tuple[Server, ...]:
@@ -210,6 +212,10 @@ def load_config_from_dict(raw: dict[str, Any]) -> SurveyConfig:
         step_prompts=prompts,
         servers=servers,
         servers_per_participant=per_participant,
+        scale_labels=dict(raw.get("scale_labels", {})),
+        scale_rules={
+            dim: tuple(rules) for dim, rules in raw.get("scale_rules", {}).items()
+        },
     )
 
 

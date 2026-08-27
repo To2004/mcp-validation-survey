@@ -196,25 +196,30 @@ def missing_required(config: SurveyConfig, server: Server, answers: dict[str, An
     Only live Blast Radius cells are required; read-only N/A cells are not. The count
     is reported rather than the cell names, since a matrix has up to 35 of them.
     """
+    labels = getattr(config, "scale_labels", {})
+    impact_label = labels.get("impact", "Action Impact")
+    sensitivity_label = labels.get("sensitivity", "Asset Confidentiality")
+    blast_label = labels.get("blast", "Consequence Scope")
+
     problems: list[str] = []
     impact = answers.get("impact", {}).get(server.key, {})
     unrated_tools = [tool.name for tool in server.tools if impact.get(tool.name) in (None, "")]
     if unrated_tools:
-        problems.append("Tool Impact: " + ", ".join(unrated_tools))
+        problems.append(f"{impact_label}: " + ", ".join(unrated_tools))
 
     sensitivity = answers.get("sensitivity", {}).get(server.key, {})
     unrated_assets = [
         asset.name for asset in server.assets if sensitivity.get(asset.name) in (None, "")
     ]
     if unrated_assets:
-        problems.append("Asset Sensitivity: " + ", ".join(unrated_assets))
+        problems.append(f"{sensitivity_label}: " + ", ".join(unrated_assets))
 
     blast = answers.get("blast", {}).get(server.key, {})
     unrated_cells = [cell for cell in server.live_blast_cells if blast.get(cell) in (None, "")]
     if unrated_cells:
         total = len(server.live_blast_cells)
         problems.append(
-            f"Blast Radius: {len(unrated_cells)} of {total} tool/asset cells are not yet rated"
+            f"{blast_label}: {len(unrated_cells)} of {total} tool/asset cells are not yet rated"
         )
     return problems
 

@@ -37,16 +37,21 @@ CONFIG_PATH = APP_ROOT / "survey_config.json"
 DEFAULT_CSV_PATH = APP_ROOT / "data" / "responses.csv"
 
 STEPS = ("impact", "sensitivity", "blast")
-STEP_TITLES = {
-    "impact": "Step 1 — MCP Tool Impact scoring",
-    "sensitivity": "Step 2 — MCP Asset Sensitivity scoring",
-    "blast": "Step 3 — MCP Blast Radius scoring",
+# Display names come from the config so they can be changed without touching code.
+FALLBACK_LABELS = {
+    "impact": "Action Impact",
+    "sensitivity": "Asset Confidentiality",
+    "blast": "Consequence Scope",
 }
-SCALE_LABELS = {
-    "impact": "Tool Impact",
-    "sensitivity": "Asset Sensitivity",
-    "blast": "Blast Radius",
-}
+STEP_NUMBER = {"impact": 1, "sensitivity": 2, "blast": 3}
+
+
+def scale_label(config: SurveyConfig, dimension: str) -> str:
+    return config.scale_labels.get(dimension, FALLBACK_LABELS[dimension])
+
+
+def step_title(config: SurveyConfig, dimension: str) -> str:
+    return f"Step {STEP_NUMBER[dimension]} — {scale_label(config, dimension)}"
 BLAST_OPTIONS = ["1", "2", "3", "4", "5"]
 RATING_LABEL_WIDTH = 3.2
 UNSURE_WIDTH = 1.5
@@ -192,6 +197,15 @@ FORM_CSS = """
       background: transparent !important;
       font-size: 16px !important;
   }
+
+  .rule-line {
+      font-size: 15px;
+      line-height: 1.5;
+      color: var(--ink-soft);
+      padding: 4px 0 4px 18px;
+      position: relative;
+  }
+  .rule-line::before { content: "•"; position: absolute; left: 4px; color: var(--accent); }
 
   .na-cell {
       text-align: center;
@@ -389,7 +403,7 @@ def validate(config: SurveyConfig, kind: str, server: Server | None) -> list[str
         return []
 
     assert server is not None
-    prefix = SCALE_LABELS[kind]
+    prefix = scale_label(config, kind)
     return [p for p in missing_required(config, server, answers) if p.startswith(prefix)]
 
 
@@ -503,14 +517,14 @@ def scale_header(levels, first_column_label: str) -> None:
 HOWTO = {
     "impact": (
         "<b>How to answer:</b> each row is one tool. Click one number per row — the "
-        "column number is the Tool Impact level. Open <i>Tool Impact levels</i> above "
+        "column number is the Action Impact level. Open <i>Tool Impact levels</i> above "
         "for the definitions. Judge each tool on its own, not against the others; "
         "levels may repeat. If you cannot judge one, click <b>Not sure</b> rather than "
         "guessing."
     ),
     "sensitivity": (
         "<b>How to answer:</b> each row is one virtual asset. Click one number per row "
-        "— the column number is the Asset Sensitivity level. Judge each asset on its "
+        "— the column number is the Asset Confidentiality level. Judge each asset on its "
         "own; levels may repeat. If you cannot judge one, click <b>Not sure</b> rather "
         "than guessing."
     ),
@@ -527,13 +541,18 @@ def how_to_answer(dimension: str) -> None:
 
 
 def scale_reference(config: SurveyConfig, dimension: str) -> None:
-    label = SCALE_LABELS[dimension]
+    label = scale_label(config, dimension)
     with st.expander(f"{label} levels — click to read the definitions", expanded=False):
         for level in config.scales[dimension]:
             st.markdown(
                 f'<div class="level-def"><b>{level.heading}</b> — {level.meaning}</div>',
                 unsafe_allow_html=True,
             )
+        rules = config.scale_rules.get(dimension, [])
+        if rules:
+            st.markdown("**Rules**")
+            for rule in rules:
+                st.markdown(f'<div class="rule-line">{rule}</div>', unsafe_allow_html=True)
 
 
 def radio_grid(config: SurveyConfig, dimension: str, server: Server, items, key_fn, noun: str) -> None:
@@ -678,7 +697,7 @@ def render_context(server: Server, step: str) -> None:
 def render_step(config: SurveyConfig, server: Server, step: str) -> None:
     render_context(server, step)
 
-    st.markdown(f"#### {STEP_TITLES[step]}")
+    st.markdown(f"#### {step_title(config, step)}")
     st.write(config.step_prompts[step])
     scale_reference(config, step)
 

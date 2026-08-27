@@ -121,9 +121,9 @@ class TestIntroPage:
 
 
 class TestRatingSteps:
-    def test_tool_impact_step_blocks_until_every_tool_is_rated(self):
+    def test_action_impact_step_blocks_until_every_tool_is_rated(self):
         app = click(complete_intro(run_app()), "Next")
-        assert "Tool Impact" in errors(app)
+        assert "Action Impact" in errors(app)
         assert "get-event" in errors(app)
 
     def test_rating_every_tool_advances_to_asset_sensitivity(self):

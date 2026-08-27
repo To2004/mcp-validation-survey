@@ -1,96 +1,96 @@
 {
   "title": "MCP Static Scanner Validation Survey",
   "subtitle": "Human Evaluation of MCP Tool and Resource Risk",
-  "intro": "This study evaluates a static risk-scanning approach for Model Context Protocol (MCP) tools — the layer that lets an AI agent use services such as Google Calendar, GitHub and Slack.\n\nYou will rate MCP servers on three security aspects: Tool Impact, Asset Sensitivity and Blast Radius. Each section says what to ignore, so please keep them apart and judge only from the information given. If a question does not make sense to you, choose **Not sure** rather than guessing — that is a useful answer.",
+  "intro": "This study evaluates a static risk-scanning approach for Model Context Protocol (MCP) tools — the layer that lets an AI agent use services such as Google Calendar, GitHub and Slack.\n\nYou will score MCP servers on three things, one at a time: **Action Impact** (what one call can do), **Asset Confidentiality** (how harmful it would be if the information were exposed), and **Consequence Scope** (how far the result of one call can reach). Score each one separately — each section says what to ignore.\n\nIf a question does not make sense to you, choose **Not sure** rather than guessing. That is a useful answer.",
   "consent": "I understand the purpose of the study and agree that my anonymized responses may be used for research and evaluation of the proposed risk-scoring method.",
   "servers_per_participant": 2,
   "scales": {
     "impact": [
       {
         "value": 1,
-        "label": "No effect",
-        "meaning": "You only learn that the service is reachable, or facts about your own session — ping, health, version, clock, whoami. Nothing about the data."
+        "label": "No material effect",
+        "meaning": "Does not read meaningful content or change meaningful state. Returns service status, a version, or the list of things the service can do."
       },
       {
         "value": 2,
         "label": "Metadata",
-        "meaning": "Only information about the data, never the data itself: names, ids, counts, sizes, timestamps, permissions, a schema, a listing. Or a change to labels and read/unread state only."
+        "meaning": "Reads or changes descriptive information without touching the main content: names, IDs, counts, timestamps, status, or a label or flag."
       },
       {
         "value": 3,
-        "label": "Content access or limited modification",
-        "meaning": "Returns the substance itself — bodies, values, message text. Or changes a bounded part of an item and leaves the rest untouched: append a line, add a comment or reply, set one named field, post a short message."
+        "label": "Content access or limited change",
+        "meaning": "Reads the content of an item, or changes part of an item without replacing it."
       },
       {
         "value": 4,
-        "label": "Full modification",
-        "meaning": "The caller controls what the item ends up containing. Create a record with its fields, update an event, write a file, overwrite content."
+        "label": "Major change",
+        "meaning": "Creates or makes a major change to data, permissions, configuration or system state — but the change can normally be undone. Creates or replaces a resource."
       },
       {
         "value": 5,
-        "label": "Destructive or executing action",
-        "meaning": "Causes an irreversible destructive effect inside the system — delete, wipe, drop, purge, truncate. Or makes the system execute code, run a command, or perform an active operation."
+        "label": "Irreversible or consequential",
+        "meaning": "Causes an effect that cannot normally be undone: permanently deletes or overwrites meaningful data, or triggers an action whose effect remains even after the system is restored."
       }
     ],
     "sensitivity": [
       {
         "value": 1,
         "label": "Public",
-        "meaning": "Already published, or disposable. There is no confidentiality left to lose, however sensitive the subject sounds."
+        "meaning": "Information that does not need confidentiality — intentionally shared with the public, or shareable without restriction."
       },
       {
         "value": 2,
-        "label": "Routine",
-        "meaning": "Low-sensitivity internal information. Limited impact if it gets out."
+        "label": "Routine internal",
+        "meaning": "Non-public information whose exposure would have limited impact. Normal information used for internal work, with little value outside the organization."
       },
       {
         "value": 3,
         "label": "Internal",
-        "meaning": "Sensitive internal information. If it leaks it could cause operational or reputational harm, but you can generally recover."
+        "meaning": "Exposure could cause meaningful harm, but the harm is limited and recoverable — internal plans or information whose exposure could disadvantage the organization."
       },
       {
         "value": 4,
-        "label": "Restricted",
-        "meaning": "Serious, lasting harm one step removed: it damages customers, staff or the organization's position — but an attacker cannot use it directly the way they could use a live password."
+        "label": "Confidential",
+        "meaning": "Exposure could cause serious harm to a person, to the organization, or to its interests: major business, legal, financial or strategic harm, or records whose exposure could seriously affect a person."
       },
       {
         "value": 5,
-        "label": "Crown jewel",
-        "meaning": "Exposure alone is an emergency: usable or legally reportable the moment it leaks — live credentials and keys, patient or card data, money-moving records. Or it controls what every other tool can reach, so losing it costs you every asset, not one."
+        "label": "Strictly confidential",
+        "meaning": "Exposure could cause severe harm, or directly enable unauthorized access, impersonation, fraud or control — secret information that lets someone gain access or authority."
       }
     ],
     "blast": [
       {
         "value": 1,
-        "label": "One person or item",
-        "meaning": "The consequence stops at one person, or at one item that nothing and nobody depends on."
+        "label": "One item or person",
+        "meaning": "The effect stops at one item or one person, and nothing else depends on the result."
       },
       {
         "value": 2,
-        "label": "One group",
-        "meaning": "It reaches the people or systems attached to what the call touched, inside one team or one bounded scope. This is the normal case for a call that touches real data: start here and move only for a reason."
+        "label": "One scope",
+        "meaning": "The effect stays inside one group or scope. Several people may be affected, but all of them are in that same group."
       },
       {
         "value": 3,
-        "label": "Several groups",
-        "meaning": "It crosses team or scope boundaries — several teams, a set of channels, records belonging to more than one part of the organization."
+        "label": "Multiple scopes",
+        "meaning": "One call affects several separate groups or scopes."
       },
       {
         "value": 4,
         "label": "Organization-wide",
-        "meaning": "Essentially everyone or everything this asset serves, all at once — but the consequence still stops at the organization's boundary."
+        "meaning": "One call can affect almost the whole organization — almost all of the people or scopes this asset serves."
       },
       {
         "value": 5,
-        "label": "Beyond the organization",
-        "meaning": "The consequence does not stay inside this asset or the organization. Give a 5 only if one of these is true: other systems depend on this to work; what the call returns can be used on its own somewhere else, like a key or a token; one call reaches every single subject the asset covers; or the asset is destroyed outright with nothing left to restore from."
+        "label": "Cascading",
+        "meaning": "The effect can spread beyond what was directly touched into other systems or scopes: one shared dependency or central resource affecting many things that rely on it."
       }
     ]
   },
   "step_prompts": {
-    "impact": "Rate what ONE call actually does: does it read, does it change, or does it destroy? Not how much it touches, and not how valuable the target is — those are the other two steps. Judge each tool on its own; levels may repeat.",
-    "sensitivity": "Rate how bad an incident would be if THIS asset were exposed, corrupted or destroyed. Judge what it normally holds, not the worst thing it could ever hold. Judge each asset on its own, not against the others; levels may repeat.",
-    "blast": "Rate how far the consequences of ONE call spread. Count people and systems affected, not rows touched: reading one password file touches one item and reaches every system that password opens. Ask who is different after the call, and how far apart they sit in the organization."
+    "impact": "Score the worst reasonable result of **one successful call** using valid inputs. Ask what the call can do — read, change, or destroy. Not how much it touches, and not how valuable the target is; those are the other two steps.",
+    "sensitivity": "Score how harmful it would be if this information were exposed. Judge what the asset normally holds, in this organization's context. Judge each asset on its own; levels may repeat.",
+    "blast": "Score how far the result of **one successful call** can reach. Measure reach only — what the asset is worth has already been scored. If a tool cannot affect an asset at all, that pair is marked N/A for you."
   },
   "servers": [
     {
@@ -783,5 +783,32 @@
         ]
       }
     }
-  ]
+  ],
+  "scale_rules": {
+    "sensitivity": [
+      "Score the harm in this context, not the type or name of the data.",
+      "The same kind of data can score differently in different organizations.",
+      "Legal or regulatory protection does not automatically set the score.",
+      "Volume does not change the score: one record and a million score the same.",
+      "If two levels both fit, take the lower one unless there is a clear reason not to."
+    ],
+    "impact": [
+      "Score what the tool can do, not what its name suggests.",
+      "Score one call.",
+      "The number of items affected does not change this score — that is Consequence Scope.",
+      "Reading sensitive content is still level 3. How sensitive it is scored separately.",
+      "Reversible means it can be undone through normal use of the system."
+    ],
+    "blast": [
+      "Measure reach only, not how valuable the target is.",
+      "Score one call, not the same call repeated.",
+      "Dependencies matter only if the effect can actually spread through them.",
+      "Crossing the organization's boundary does not by itself mean level 5."
+    ]
+  },
+  "scale_labels": {
+    "impact": "Action Impact",
+    "sensitivity": "Asset Confidentiality",
+    "blast": "Consequence Scope"
+  }
 }
