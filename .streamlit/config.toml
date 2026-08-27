@@ -7,3 +7,9 @@ textColor = "#0f172a"
 
 [browser]
 gatherUsageStats = false
+
+[client]
+# TEMPORARY, for setup only. Streamlit Cloud redacts tracebacks by default, which
+# made a deploy-only crash impossible to diagnose from the browser. Remove this
+# section before recruiting participants - they should never see a traceback.
+showErrorDetails = true
