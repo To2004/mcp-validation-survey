@@ -193,6 +193,25 @@ class TestRatingSteps:
         assert app.session_state["page"] == 4
 
 
+class TestConfigLoading:
+    def test_the_config_loader_is_not_cached(self):
+        """Streamlit Cloud hot-reloads code without restarting the container, so a
+        cached SurveyConfig survives a change to the Server class and every session
+        then dies with an AttributeError against the stale pickled object. This is
+        exactly what took the deployed app down when mcp_context was added."""
+        import streamlit_app
+
+        assert not hasattr(streamlit_app._load, "clear"), (
+            "_load is wrapped in a Streamlit cache; a cached config outlives the "
+            "class it was built from"
+        )
+
+    def test_every_server_carries_both_contexts(self):
+        for server in CONFIG.enabled_servers:
+            assert server.mcp_context, server.key
+            assert server.scenario, server.key
+
+
 class TestStepContext:
     """Each step gets only the context that judgement needs."""
 
@@ -249,8 +268,12 @@ class TestServerAssignment:
         # Straight to feedback, not to a third server.
         assert any(b.label == "Submit" for b in app.button)
 
-    def test_the_intro_says_how_many_servers_they_will_rate(self):
-        assert "2 of the 5" in page_text(run_app())
+    def test_the_intro_does_not_advertise_that_it_is_a_subset(self):
+        # Participants are not told they see only some servers - it invites
+        # questions about what they are missing and adds nothing to the task.
+        text = page_text(run_app())
+        assert "2 of the 5" not in text
+        assert "of the 5" not in text
 
     def test_the_progress_bar_projects_the_full_length_before_assignment(self):
         # The plan is only 2 pages long until a participant starts. Showing that

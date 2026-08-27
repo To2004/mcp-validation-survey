@@ -1,16 +1,11 @@
-# Streamlit Community Cloud hibernates an app that has had no traffic, and a
-# sleeping app greets the next visitor with a "Zzzz" screen plus a rebuild wait -
-# a good way to lose participants mid-recruitment.
+# Streamlit Community Cloud puts an app to sleep after 12 hours without traffic.
+# A sleeping app greets the next visitor with a "Zzzz" screen and a rebuild wait,
+# which is a good way to lose participants. This workflow requests the app
+# periodically so it stays warm while the study is running.
 #
-# "Traffic" means a real app session: the browser loading the page and opening a
-# WebSocket to the container. A plain HTTP request does not count, and returns 200
-# whether the app is awake or asleep - so an HTTP pinger reports success while the
-# app sleeps. This workflow therefore drives headless Chromium and only passes once
-# the survey has actually rendered.
-#
-# It stops on its own at COLLECTION_ENDS and disables itself. To extend the study,
-# change that date and re-enable the workflow (Actions -> Keep the survey awake ->
-# "..." -> Enable workflow).
+# It stops on its own at COLLECTION_ENDS below, and disables itself so it stops
+# consuming Actions runs. To extend the study, change that date and re-enable the
+# workflow (Actions -> Keep the survey awake -> "..." -> Enable workflow).
 
 name: Keep the survey awake
 
@@ -21,18 +16,18 @@ env:
 
 on:
   schedule:
-    # Every 2 hours. GitHub delays scheduled jobs on free runners, so treat this as
-    # "roughly every 2-4 hours" - still comfortably inside the hibernation window.
-    - cron: "0 */2 * * *"
-  workflow_dispatch: # visit on demand from the Actions tab
+    # Every 30 minutes. GitHub runs scheduled jobs late and sometimes skips them
+    # on free runners - in practice this fires roughly hourly, which is still far
+    # inside the 12 hour sleep window.
+    - cron: "*/30 * * * *"
+  workflow_dispatch: # lets you ping on demand from the Actions tab
 
 permissions:
   actions: write # so the job can disable this workflow when the window closes
 
 jobs:
-  visit:
+  ping:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
     steps:
       - name: Check the collection window
         id: window
@@ -46,23 +41,29 @@ jobs:
             echo "expired=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - uses: actions/checkout@v4
-        if: steps.window.outputs.expired == 'false'
-
-      - uses: actions/setup-python@v5
-        if: steps.window.outputs.expired == 'false'
-        with:
-          python-version: "3.12"
-
-      - name: Install headless Chromium
+      - name: Request the app
         if: steps.window.outputs.expired == 'false'
         run: |
-          pip install --quiet playwright
-          playwright install --with-deps chromium
+          echo "Pinging $APP_URL"
 
-      - name: Visit the app
-        if: steps.window.outputs.expired == 'false'
-        run: python scripts/keep_awake.py
+          # Streamlit answers the first request with a 303 to its auth endpoint to
+          # bootstrap a session cookie, then redirects back. That is normal for a
+          # public app, but it only resolves to 200 if cookies are kept across the
+          # redirect chain - hence the cookie jar.
+          #
+          # Assign, then check the exit status separately: putting `|| echo 000`
+          # inside the substitution concatenates curl's output with the fallback.
+          STATUS=$(curl -sS -o /dev/null -L --max-time 90 \
+                        -c cookies.txt -b cookies.txt \
+                        -A "keep-awake-bot (github actions)" \
+                        -w '%{http_code}' "$APP_URL") || STATUS="000"
+          echo "final HTTP status: $STATUS"
+
+          case "$STATUS" in
+            2*) echo "App is awake." ;;
+            000) echo "::warning::Request failed outright - app may be down." ;;
+            *)  echo "::warning::Unexpected status $STATUS - check the app." ;;
+          esac
 
       - name: Retire this workflow once the window closes
         if: steps.window.outputs.expired == 'true'
