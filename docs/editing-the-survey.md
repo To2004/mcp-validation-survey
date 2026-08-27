@@ -56,6 +56,15 @@ Each scale must have exactly the levels 1–5, in order. Blast matrix tools must
 appear in that server's `tools` list. Names must not contain `__`, which separates the
 parts of a CSV column name.
 
+## How many servers each participant sees
+
+`servers_per_participant` at the top of `survey_config.json` controls this. Set it to
+the number of servers in the config to go back to showing everyone all of them.
+
+Assignment is balanced, not uniformly random: the least-covered servers are handed out
+first, ties broken at random, so coverage stays within one of even at any point. See
+`survey/assignment.py`.
+
 ## Running a subset of servers
 
 Set `"enabled": false` on any server. Disabled servers disappear from the wizard and

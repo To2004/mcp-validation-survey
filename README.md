@@ -11,9 +11,10 @@ an account.
 
 * Renders the survey as a Google-Forms-style wizard — one section per screen, with a
   progress bar, per-section validation, and Back/Next navigation.
-* Covers all five MCP servers from the source form (Google Calendar, GitHub, Slack,
-  Filesystem, SQL Database), each with the three scoring steps: **Tool Impact**,
-  **Asset Sensitivity** and **Blast Radius**.
+* Covers five MCP servers (Google Calendar, GitHub, Slack, Filesystem, SQL Database),
+  each with three scoring steps: **Tool Impact**, **Asset Sensitivity** and **Blast
+  Radius**. Each participant is assigned **2 of the 5**, balanced so coverage stays
+  even across the study — set `servers_per_participant` in `survey_config.json`.
 * Stores every **completed** submission in Supabase (Postgres) — one row per
   participant plus one row per individual rating — and exports both wide and
   long-format CSV. Abandoned sessions are not stored.

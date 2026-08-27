@@ -3,6 +3,7 @@
   "subtitle": "Human Evaluation of MCP Tool and Resource Risk",
   "intro": "This study evaluates a static risk-scanning approach for Model Context Protocol (MCP) tools — the layer that lets an AI agent use services such as Google Calendar, GitHub and Slack.\n\nYou will rate the MCP servers below with respect to three MCP security aspects: Tool Impact, Asset Sensitivity and Blast Radius. Each section says what to ignore, so please keep them apart and judge only from the information given.",
   "consent": "I understand the purpose of the study and agree that my anonymized responses may be used for research and evaluation of the proposed risk-scoring method.",
+  "servers_per_participant": 2,
   "scales": {
     "impact": [
       {
