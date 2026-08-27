@@ -618,10 +618,34 @@ def render_intro(config: SurveyConfig) -> None:
         st.checkbox(config.consent, key="consent")
 
 
+# Which context each step needs. Tool Impact is a judgement about the tool itself,
+# so the organisation is a distraction there; Asset Sensitivity is entirely about
+# what the data means to this organisation; Blast Radius needs both, since it is
+# the reach of a tool over an asset.
+STEP_CONTEXT = {
+    "impact": ("mcp",),
+    "sensitivity": ("org",),
+    "blast": ("mcp", "org"),
+}
+CONTEXT_LABELS = {"mcp": "About this MCP server", "org": "About this organization"}
+
+
+def render_context(server: Server, step: str) -> None:
+    for kind in STEP_CONTEXT[step]:
+        text = server.mcp_context if kind == "mcp" else server.scenario
+        if not text:
+            continue
+        with st.container(border=True):
+            st.markdown(
+                f'<div class="question-title"><b>{server.title} MCP — '
+                f'{CONTEXT_LABELS[kind]}</b></div>',
+                unsafe_allow_html=True,
+            )
+            st.write(text)
+
+
 def render_step(config: SurveyConfig, server: Server, step: str) -> None:
-    with st.container(border=True):
-        st.markdown(f'<div class="question-title"><b>{server.title} MCP</b></div>', unsafe_allow_html=True)
-        st.write(server.scenario)
+    render_context(server, step)
 
     st.markdown(f"#### {STEP_TITLES[step]}")
     st.write(config.step_prompts[step])
@@ -783,7 +807,14 @@ def main() -> None:
     index = min(st.session_state.page, len(plan) - 1)
     st.session_state.page = index
     kind, server = plan[index]
-    st.progress((index + 1) / len(plan), text=f"Section {index + 1} of {len(plan)}")
+    # Before assignment the plan is just intro + feedback, which would tell the
+    # participant there are 2 sections when there will be 8. Project the real total.
+    if st.session_state.get("assigned"):
+        total = len(plan)
+    else:
+        per = min(config.servers_per_participant, len(config.enabled_servers))
+        total = 2 + len(STEPS) * per
+    st.progress((index + 1) / total, text=f"Section {index + 1} of {total}")
 
     if kind == "intro":
         render_intro(config)

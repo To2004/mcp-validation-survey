@@ -193,6 +193,45 @@ class TestRatingSteps:
         assert app.session_state["page"] == 4
 
 
+class TestStepContext:
+    """Each step gets only the context that judgement needs."""
+
+    def _calendar_step(self, step_index: int):
+        app = complete_intro(run_app(), assign=["calendar"])
+        for _ in range(step_index):
+            app = set_ratings(app, impact_keys("calendar"), 3)
+            app = set_ratings(app, sensitivity_keys("calendar"), 3)
+            app = click(app, "Next")
+        return app
+
+    def test_tool_impact_explains_the_server_not_the_organisation(self):
+        text = page_text(complete_intro(run_app(), assign=["calendar"]))
+        assert "About this MCP server" in text
+        assert "About this organization" not in text
+
+    def test_asset_sensitivity_explains_the_organisation_not_the_server(self):
+        app = set_ratings(complete_intro(run_app(), assign=["calendar"]), impact_keys("calendar"), 3)
+        text = page_text(click(app, "Next"))
+        assert "About this organization" in text
+        assert "About this MCP server" not in text
+
+    def test_blast_radius_shows_both(self):
+        app = set_ratings(complete_intro(run_app(), assign=["calendar"]), impact_keys("calendar"), 3)
+        app = set_ratings(click(app, "Next"), sensitivity_keys("calendar"), 3)
+        text = page_text(click(app, "Next"))
+        assert "About this MCP server" in text
+        assert "About this organization" in text
+
+    def test_the_org_text_is_the_source_form_wording_verbatim(self):
+        server = next(s for s in CONFIG.enabled_servers if s.key == "calendar")
+        assert server.scenario.startswith("CBG's workplace-services team")
+
+    def test_the_mcp_text_does_not_name_the_organisation(self):
+        for server in CONFIG.enabled_servers:
+            assert server.mcp_context, server.key
+            assert "CBG" not in server.mcp_context, server.key
+
+
 class TestServerAssignment:
     def test_a_participant_is_given_two_servers(self):
         app = complete_intro(run_app(), assign=None)
@@ -212,6 +251,18 @@ class TestServerAssignment:
 
     def test_the_intro_says_how_many_servers_they_will_rate(self):
         assert "2 of the 5" in page_text(run_app())
+
+    def test_the_progress_bar_projects_the_full_length_before_assignment(self):
+        # The plan is only 2 pages long until a participant starts. Showing that
+        # would tell them the survey is a quarter of its real length: 1 of 8, not
+        # 1 of 2, so the bar reads 12% rather than 50%.
+        app = run_app()
+        assert not app.session_state["assigned"]
+        assert app.get("progress")[0].value == int(100 / 8)
+
+    def test_the_progress_bar_matches_the_plan_once_assigned(self):
+        app = complete_intro(run_app(), assign=None)
+        assert app.get("progress")[0].value == int(100 * 2 / 8)
 
     def test_assignment_is_recorded_with_the_response(self, tmp_path):
         import csv

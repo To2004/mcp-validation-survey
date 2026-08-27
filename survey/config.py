@@ -51,7 +51,8 @@ class Server:
     key: str
     title: str
     enabled: bool
-    scenario: str
+    scenario: str      # what this deployment means to the organisation
+    mcp_context: str   # what the server itself exposes, independent of any org
     tools: tuple[Item, ...]
     assets: tuple[Item, ...]
     blast_tools: tuple[str, ...]
@@ -169,6 +170,7 @@ def _parse_server(raw: dict[str, Any]) -> Server:
         title=_require(raw, "title", where),
         enabled=bool(raw.get("enabled", True)),
         scenario=raw.get("scenario", ""),
+        mcp_context=raw.get("mcp_context", ""),
         tools=tools,
         assets=assets,
         blast_tools=blast_tools,
