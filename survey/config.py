@@ -85,6 +85,7 @@ class SurveyConfig:
     scales: dict[str, tuple[Level, ...]]
     step_prompts: dict[str, str]
     servers: tuple[Server, ...]
+    servers_per_participant: int
 
     @property
     def enabled_servers(self) -> tuple[Server, ...]:
@@ -194,6 +195,10 @@ def load_config_from_dict(raw: dict[str, Any]) -> SurveyConfig:
     if not any(server.enabled for server in servers):
         raise ConfigError("config: at least one enabled server is required")
 
+    per_participant = int(raw.get("servers_per_participant", len(servers)))
+    if per_participant < 1:
+        raise ConfigError("config: servers_per_participant must be at least 1")
+
     return SurveyConfig(
         title=raw["title"],
         subtitle=raw["subtitle"],
@@ -202,6 +207,7 @@ def load_config_from_dict(raw: dict[str, Any]) -> SurveyConfig:
         scales=scales,
         step_prompts=prompts,
         servers=servers,
+        servers_per_participant=per_participant,
     )
 
 
