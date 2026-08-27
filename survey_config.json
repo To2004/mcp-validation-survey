@@ -8,89 +8,89 @@
     "impact": [
       {
         "value": 1,
-        "label": "Liveness",
-        "meaning": "The system only says “I am here.” Nothing about the data is touched or revealed (ping, health, version, whoami)."
+        "label": "No effect",
+        "meaning": "You only learn the service is reachable, or facts about your own session — ping, health, version, clock, whoami. Nothing about the data."
       },
       {
         "value": 2,
         "label": "Metadata",
-        "meaning": "The shape of the data, never its substance: names, ids, counts, sizes, timestamps, permissions, a listing — or a change to labels and read/unread state only."
+        "meaning": "Only information about the data, never the data itself: names, ids, counts, sizes, timestamps, permissions, a schema, a listing. Or a change to labels and read/unread state only."
       },
       {
         "value": 3,
-        "label": "Read content",
-        "meaning": "The substance is disclosed and nothing changes: actual bodies and values are returned (read, get, fetch, export). Afterwards the system is exactly as before."
+        "label": "Content read or small write",
+        "meaning": "Returns the substance itself — bodies, values, message text. Or writes a small, bounded part and leaves the rest of the item alone: append a line, add a comment, set one named field."
       },
       {
         "value": 4,
-        "label": "Recoverable write",
-        "meaning": "State changes and the system can undo it: something is created, edited in part, moved, or posted where it can still be deleted. Permission and membership changes belong here too."
+        "label": "Write",
+        "meaning": "The ordinary write: the caller decides what the item says. Create a record with its fields, update an event, write a file, overwrite content."
       },
       {
         "value": 5,
-        "label": "Irreversible",
-        "meaning": "No path back from inside the system: content destroyed or fully overwritten, code executed, money moved, or a message sent outside (email, webhook, public post) where it cannot be recalled."
+        "label": "Removal or execution",
+        "meaning": "No way back from inside the system: delete, wipe, drop, purge, truncate. Or it runs code, executes a command, or moves money."
       }
     ],
     "sensitivity": [
       {
         "value": 1,
         "label": "Public",
-        "meaning": "Already published or disposable. Nothing left to lose but uptime."
+        "meaning": "Already published, or disposable. There is no confidentiality left to lose, however sensitive the subject sounds."
       },
       {
         "value": 2,
         "label": "Routine",
-        "meaning": "Low-value internal material — onboarding guides, templates, org charts. Barely worth stealing."
+        "meaning": "Low-value internal material. If it leaked, you would shrug."
       },
       {
         "value": 3,
         "label": "Internal",
-        "meaning": "Meant to stay in-house. A leak is awkward and briefly useful to others, but not lasting damage — project docs, schemas, ordinary team schedules."
+        "meaning": "Meant to stay in-house. A leak is disruptive and embarrassing, but you recover from it."
       },
       {
         "value": 4,
         "label": "Restricted",
-        "meaning": "A leak causes serious, lasting harm to customers, staff or the organization, but is not instantly usable the way a live credential is — customer and production data, payroll and HR, proprietary source, audit logs."
+        "meaning": "Serious, lasting harm one step removed: it damages customers, staff or the organization's position — but an attacker cannot use it directly the way they could use a live password."
       },
       {
         "value": 5,
-        "label": "Critical",
-        "meaning": "Exposure alone is an emergency: exploitable or legally reportable the moment it leaks — live credentials and keys, regulated records such as patient or card data, money-moving material."
+        "label": "Crown jewel",
+        "meaning": "Exposure alone is an emergency: usable or legally reportable the moment it leaks — live credentials and keys, patient or card data, money-moving records. Or it controls what every other tool can reach, so losing it costs you every asset, not one."
       }
     ],
     "blast": [
       {
         "value": 1,
-        "label": "Negligible",
-        "meaning": "One item among many, one person at most. The asset as a whole is untouched."
+        "label": "One person or item",
+        "meaning": "The consequence stops at one person, or at one item that nothing and nobody depends on."
       },
       {
         "value": 2,
-        "label": "Minor",
-        "meaning": "A few items or one small bounded scope. Real but local, and easy to restore."
+        "label": "One group",
+        "meaning": "It reaches the people or systems attached to what the call touched, inside one team or one bounded scope — the attendees of an event, the members of a channel. This is the normal case for a call that touches real data: start here and move only for a reason."
       },
       {
         "value": 3,
-        "label": "Major",
-        "meaning": "Most of the asset, or several whole scopes in one call. Serious, but still partial."
+        "label": "Several groups",
+        "meaning": "It crosses team or scope boundaries — several teams, a set of channels, records belonging to more than one part of the organization."
       },
       {
         "value": 4,
-        "label": "Total but contained",
-        "meaning": "Essentially everything the asset holds — but the consequences stop at its boundary. Full coverage of an ordinary asset is 4, never 5."
+        "label": "Organization-wide",
+        "meaning": "Essentially everyone or everything this asset serves, all at once — but the consequence still stops at the organization's boundary."
       },
       {
         "value": 5,
-        "label": "Systemic",
-        "meaning": "The consequences escape the asset. Award 5 only through one of the three routes listed below."
+        "label": "Beyond the organization",
+        "meaning": "The consequence does not stay inside this asset or the organization. Give a 5 only if one of these is true: other systems depend on this to work (they log in against it, or load their settings from it); what the call returns can be used on its own somewhere else, like a key or a token; one call reaches every single subject the asset covers; or the asset is destroyed outright with nothing left to restore from."
       }
     ]
   },
   "step_prompts": {
-    "impact": "Rate the tool impact of MCP tools. Think about what the tool may perform. A short description of every tool is given beneath its name. Judge each tool on its own, not against the others.",
-    "sensitivity": "Rate the asset itself, whichever tool reaches it. A short description of every asset is given beneath its name. Judge each asset on its own, not against the others. Levels may repeat. Rate what the asset normally holds, not the worst it could ever hold.",
-    "blast": "Rate the potential effect of a tool on an asset at scale. Think about “How far does one call reach?” Score every tool and asset pair from 1 to 5. Where a tool barely touches an asset, that is a 1 — the lowest rung of the scale, not a skipped cell."
+    "impact": "Rate what ONE call actually does: does it read, does it write, or does it remove? Not how much it touches, and not how valuable the target is — those are the other two steps. A short description of every tool is given beneath its name. Judge each tool on its own; levels may repeat.",
+    "sensitivity": "Rate how bad an incident would be if THIS asset were exposed, corrupted or destroyed. Judge what it normally holds, not the worst thing it could ever hold. Judge each asset on its own, not against the others; levels may repeat.",
+    "blast": "Rate how far the consequences of ONE call spread. Count people and systems affected, not rows touched: reading one password file touches one item and reaches every system that password opens. Ask who is different after the call, and how far apart they sit in the organization. Score every open cell from 1 to 5."
   },
   "servers": [
     {

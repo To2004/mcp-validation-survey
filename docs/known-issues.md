@@ -28,17 +28,26 @@ which needs no change; or (b) align the two asset lists in `survey_config.json` 
 collecting data. The app surfaces this list in the researcher panel under *Survey
 design warnings*.
 
-## 2. Blast Radius level 5 refers to three routes that are not in the form
+## 2. Blast Radius level 5 — RESOLVED
 
-The Blast Radius scale defines level 5 as: the consequences escape the asset, and
-"Award 5 only through one of the three routes listed below." Those three routes do not
-appear anywhere in the document — the sentence is a dangling reference.
+The source form defined level 5 as "the consequences escape the asset. Award 5 only
+through one of the three routes listed below", and those routes appeared nowhere in
+the document — participants were told level 5 was gated on criteria they never saw.
 
-**Consequence.** Participants are told level 5 is gated on criteria they are never
-shown, so any 5 in the Blast Radius data is unguided.
+Fixed. The scales now come from the scanner's own prompts
+(`scoring-prompts-AS-RUN.md`, experiment `five_level_v2_v5r_nacombo`), which state
+four conditions rather than three. They are written into level 5 itself:
 
-**Fix.** Add the three routes to `scales.blast[4].meaning` in `survey_config.json`
-before running the study.
+* other systems depend on it to work — they authenticate against it or load
+  configuration from it;
+* what the call returns is usable on its own elsewhere — a credential, key or token;
+* one call reaches the entire population of subjects the asset covers;
+* the asset is destroyed outright with nothing left to restore from.
+
+All three scales were rewritten from the same source, so the survey now asks humans
+the question the scanner answers. Note the Tool Impact ladder changed shape in doing
+so: it is now read / write / remove (No effect, Metadata, Content read or small
+write, Write, Removal or execution), not the earlier reversible/irreversible framing.
 
 ## 3. Tool Impact does not span 1–5 on most servers
 
