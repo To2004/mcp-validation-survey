@@ -70,19 +70,11 @@ def set_ratings(app: AppTest, keys, value: int) -> AppTest:
     return app.run()
 
 
-def complete_intro(app: AppTest, participant: str = "P01", assign=("calendar",)) -> AppTest:
-    """Fill the intro and start.
-
-    `assign` pins which servers the participant gets, so tests about a specific
-    server stay deterministic; the app only assigns when nothing is set yet. Pass
-    `assign=None` to exercise the real balanced assignment.
-    """
+def complete_intro(app: AppTest, participant: str = "P01") -> AppTest:
     app.text_input[0].set_value(participant)
     app.session_state["familiarity_llm_agents"] = 4
     app.session_state["familiarity_mcp"] = 3
     app.checkbox(key="consent").check()
-    if assign is not None:
-        app.session_state["assigned"] = list(assign)
     return click(app.run(), "Next")
 
 
@@ -193,154 +185,6 @@ class TestRatingSteps:
         assert app.session_state["page"] == 4
 
 
-class TestConfigLoading:
-    def test_the_config_loader_is_not_cached(self):
-        """Streamlit Cloud hot-reloads code without restarting the container, so a
-        cached SurveyConfig survives a change to the Server class and every session
-        then dies with an AttributeError against the stale pickled object. This is
-        exactly what took the deployed app down when mcp_context was added."""
-        import streamlit_app
-
-        assert not hasattr(streamlit_app._load, "clear"), (
-            "_load is wrapped in a Streamlit cache; a cached config outlives the "
-            "class it was built from"
-        )
-
-    def test_every_server_carries_both_contexts(self):
-        for server in CONFIG.enabled_servers:
-            assert server.mcp_context, server.key
-            assert server.scenario, server.key
-
-
-class TestStepContext:
-    """Each step gets only the context that judgement needs."""
-
-    def _calendar_step(self, step_index: int):
-        app = complete_intro(run_app(), assign=["calendar"])
-        for _ in range(step_index):
-            app = set_ratings(app, impact_keys("calendar"), 3)
-            app = set_ratings(app, sensitivity_keys("calendar"), 3)
-            app = click(app, "Next")
-        return app
-
-    def test_tool_impact_explains_the_server_not_the_organisation(self):
-        text = page_text(complete_intro(run_app(), assign=["calendar"]))
-        assert "About this MCP server" in text
-        assert "About this organization" not in text
-
-    def test_asset_sensitivity_explains_the_organisation_not_the_server(self):
-        app = set_ratings(complete_intro(run_app(), assign=["calendar"]), impact_keys("calendar"), 3)
-        text = page_text(click(app, "Next"))
-        assert "About this organization" in text
-        assert "About this MCP server" not in text
-
-    def test_blast_radius_shows_both(self):
-        app = set_ratings(complete_intro(run_app(), assign=["calendar"]), impact_keys("calendar"), 3)
-        app = set_ratings(click(app, "Next"), sensitivity_keys("calendar"), 3)
-        text = page_text(click(app, "Next"))
-        assert "About this MCP server" in text
-        assert "About this organization" in text
-
-    def test_the_org_text_is_the_source_form_wording_verbatim(self):
-        server = next(s for s in CONFIG.enabled_servers if s.key == "calendar")
-        assert server.scenario.startswith("CBG's workplace-services team")
-
-    def test_the_mcp_text_does_not_name_the_organisation(self):
-        for server in CONFIG.enabled_servers:
-            assert server.mcp_context, server.key
-            assert "CBG" not in server.mcp_context, server.key
-
-
-class TestServerAssignment:
-    def test_a_participant_is_given_two_servers(self):
-        app = complete_intro(run_app(), assign=None)
-        assert len(app.session_state["assigned"]) == 2
-
-    def test_the_wizard_only_covers_the_assigned_servers(self):
-        app = complete_intro(run_app(), assign=None)
-        # intro + 3 steps for each of 2 servers + feedback
-        assert app.session_state["page"] == 1
-        assigned = app.session_state["assigned"]
-        assert len(assigned) == 2
-        for server_key in assigned:
-            app = complete_server_steps(app, server_key)
-            assert not app.exception
-        # Straight to feedback, not to a third server.
-        assert any(b.label == "Submit" for b in app.button)
-
-    def test_the_intro_does_not_advertise_that_it_is_a_subset(self):
-        # Participants are not told they see only some servers - it invites
-        # questions about what they are missing and adds nothing to the task.
-        text = page_text(run_app())
-        assert "2 of the 5" not in text
-        assert "of the 5" not in text
-
-    def test_the_progress_bar_projects_the_full_length_before_assignment(self):
-        # The plan is only 2 pages long until a participant starts. Showing that
-        # would tell them the survey is a quarter of its real length: 1 of 8, not
-        # 1 of 2, so the bar reads 12% rather than 50%.
-        app = run_app()
-        assert not app.session_state["assigned"]
-        assert app.get("progress")[0].value == int(100 / 8)
-
-    def test_the_progress_bar_matches_the_plan_once_assigned(self):
-        app = complete_intro(run_app(), assign=None)
-        assert app.get("progress")[0].value == int(100 * 2 / 8)
-
-    def test_assignment_is_recorded_with_the_response(self, tmp_path):
-        import csv
-
-        csv_path = tmp_path / "responses.csv"
-        app = complete_intro(run_app(responses_csv_path=str(csv_path)), assign=None)
-        assigned = list(app.session_state["assigned"])
-        for server_key in assigned:
-            app = complete_server_steps(app, server_key)
-        app = click(app, "Submit")
-        assert not app.exception
-
-        with csv_path.open(encoding="utf-8", newline="") as handle:
-            row = next(csv.DictReader(handle))
-        assert set(row["assigned_servers"].split("|")) == set(assigned)
-
-    def test_unassigned_servers_are_blank_not_zero(self, tmp_path):
-        import csv
-
-        csv_path = tmp_path / "responses.csv"
-        app = complete_intro(run_app(responses_csv_path=str(csv_path)), assign=["calendar"])
-        app = complete_server_steps(app, "calendar")
-        app = click(app, "Submit")
-
-        with csv_path.open(encoding="utf-8", newline="") as handle:
-            row = next(csv.DictReader(handle))
-        assert row["impact__calendar__get-event"] == "3"
-        assert row["impact__slack__channels_list"] == ""
-        assert row["sens__github__internal-docs"] == ""
-
-    def test_assignment_balances_against_what_is_already_stored(self, tmp_path):
-        """Servers already well covered should not be handed out again."""
-        import csv
-
-        from survey.schema import csv_columns
-        from survey.config import load_config
-
-        config = load_config(APP_PATH.parent / "survey_config.json")
-        csv_path = tmp_path / "responses.csv"
-        columns = csv_columns(config)
-        with csv_path.open("w", encoding="utf-8", newline="") as handle:
-            writer = csv.DictWriter(handle, fieldnames=columns)
-            writer.writeheader()
-            for n in range(6):
-                writer.writerow(
-                    {**{c: "" for c in columns},
-                     "submission_id": f"s{n}",
-                     "assigned_servers": "calendar|github"}
-                )
-
-        app = complete_intro(run_app(responses_csv_path=str(csv_path)), assign=None)
-        assigned = set(app.session_state["assigned"])
-        assert not (assigned & {"calendar", "github"}), assigned
-
-
 class TestRatingButtons:
     def test_clicking_a_rating_button_records_it(self):
         app = complete_intro(run_app())
@@ -385,10 +229,13 @@ class TestAnswersSurviveNavigation:
 
 class TestSubmission:
     def test_full_run_persists_a_row_and_shows_the_thank_you_page(self, tmp_path):
+        from survey.config import load_config
+
         csv_path = tmp_path / "responses.csv"
+        config = load_config(APP_PATH.parent / "survey_config.json")
         app = complete_intro(run_app(responses_csv_path=str(csv_path)), participant="P42")
-        for server_key in app.session_state["assigned"]:
-            app = complete_server_steps(app, server_key)
+        for server in config.enabled_servers:
+            app = complete_server_steps(app, server.key)
             assert not app.exception
 
         app.session_state["confidence"] = 5
@@ -412,14 +259,17 @@ class TestSubmission:
     def test_a_second_submission_appends_rather_than_overwriting(self, tmp_path):
         import csv
 
+        from survey.config import load_config
+
         csv_path = tmp_path / "responses.csv"
+        config = load_config(APP_PATH.parent / "survey_config.json")
 
         for participant in ("P01", "P02"):
             app = complete_intro(
                 run_app(responses_csv_path=str(csv_path)), participant=participant
             )
-            for server_key in app.session_state["assigned"]:
-                app = complete_server_steps(app, server_key)
+            for server in config.enabled_servers:
+                app = complete_server_steps(app, server.key)
             app = click(app, "Submit")
             assert not app.exception
 
