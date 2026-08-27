@@ -10,12 +10,17 @@ Two shapes are produced from the same submission:
 Every rating a participant makes is 1-5. Blast Radius cells the scanner marks as
 non-existent are fixed at N/A and shown read-only, so participants score only the
 tool/asset pairs that actually exist.
+
+Each participant rates a balanced subset of the servers, not all of them, so the
+columns of the servers they were not assigned are blank. `assigned_servers` records
+which ones they saw - always read it before treating a blank as missing data.
 """
 
 from __future__ import annotations
 
 from typing import Any, Iterable, Sequence
 
+from survey.assignment import format_assigned, parse_assigned
 from survey.config import COLUMN_SEPARATOR, Server, SurveyConfig
 
 NOT_APPLICABLE = "N/A"
@@ -28,6 +33,7 @@ METADATA_COLUMNS = (
     "familiarity_llm_agents",
     "familiarity_mcp",
     "consent",
+    "assigned_servers",
     "duration_seconds",
 )
 FEEDBACK_COLUMNS = ("ambiguity_notes", "comments", "confidence")
@@ -85,14 +91,22 @@ def response_to_row(
         "familiarity_llm_agents": _rating(answers.get("familiarity_llm_agents")),
         "familiarity_mcp": _rating(answers.get("familiarity_mcp")),
         "consent": "yes" if answers.get("consent") else "no",
+        "assigned_servers": format_assigned(parse_assigned(answers.get("assigned_servers"))),
         "duration_seconds": _rating(answers.get("duration_seconds")),
     }
 
     impact = answers.get("impact", {})
     sensitivity = answers.get("sensitivity", {})
     blast = answers.get("blast", {})
+    assigned = set(parse_assigned(answers.get("assigned_servers")))
 
     for server in config.enabled_servers:
+        if server.key not in assigned:
+            # Not shown to this participant: leave every column blank rather than
+            # inventing a value. `assigned_servers` says why.
+            for column in server_columns(server):
+                row[column] = ""
+            continue
         for tool in server.tools:
             row[impact_column(server.key, tool.name)] = _rating(
                 impact.get(server.key, {}).get(tool.name)
@@ -125,7 +139,9 @@ def long_format_rows(
             "submission_id": row.get("submission_id", ""),
             "participant_id": row.get("participant_id", ""),
         }
-        for server in config.enabled_servers:
+        # Only the servers this participant was assigned produced ratings; emitting
+        # empty records for the others would pad the long export with non-answers.
+        for server in assigned_servers(config, row):
             for tool in server.tools:
                 records.append(
                     {
@@ -160,6 +176,12 @@ def long_format_rows(
                     }
                 )
     return records
+
+
+def assigned_servers(config: SurveyConfig, row: dict[str, Any]) -> list[Server]:
+    """The servers a stored response actually covers."""
+    keys = set(parse_assigned(row.get("assigned_servers")))
+    return [server for server in config.enabled_servers if server.key in keys]
 
 
 def missing_required(config: SurveyConfig, server: Server, answers: dict[str, Any]) -> list[str]:

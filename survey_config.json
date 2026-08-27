@@ -3,6 +3,7 @@
   "subtitle": "Human Evaluation of MCP Tool and Resource Risk",
   "intro": "This study evaluates a static risk-scanning approach for Model Context Protocol (MCP) tools — the layer that lets an AI agent use services such as Google Calendar, GitHub and Slack.\n\nYou will rate the MCP servers below with respect to three MCP security aspects: Tool Impact, Asset Sensitivity and Blast Radius. Each section says what to ignore, so please keep them apart and judge only from the information given.",
   "consent": "I understand the purpose of the study and agree that my anonymized responses may be used for research and evaluation of the proposed risk-scoring method.",
+  "servers_per_participant": 2,
   "scales": {
     "impact": [
       {
@@ -97,6 +98,7 @@
       "title": "Google Calendar",
       "enabled": true,
       "scenario": "CBG's workplace-services team runs the agent against the real 13-tool Google Calendar surface. The central fact for this organization is that event metadata is itself sensitive: attendee lists and titles disclose unannounced deals, candidates and departures without anyone opening an event body. Knowing which calendars exist is not — the container list is routine.",
+      "mcp_context": "The Google Calendar MCP puts the real 13-tool Google Calendar surface in reach of the agent. Through it the agent can list the calendars an account can see, read free/busy blocks, read and search events in full, and create or delete events.",
       "tools": [
         {
           "name": "get-current-time",
@@ -209,6 +211,7 @@
       "title": "GitHub",
       "enabled": true,
       "scenario": "CBG's engineering organization runs the agent against the vendor's 26-tool GitHub catalog. CBG does not disclose its repository inventory to integrators: the list of private repository names alone maps the product estate and the production topology. The assets below therefore name classes of repository and the mutable states this surface can reach, not the repositories themselves.",
+      "mcp_context": "The GitHub MCP puts the vendor's 26-tool GitHub catalog in reach of the agent. Through it the agent can read commit and issue metadata, read a named file, search code across repositories in scope, write a file, and open or merge pull requests.",
       "tools": [
         {
           "name": "list_commits",
@@ -331,6 +334,7 @@
       "title": "Slack",
       "enabled": true,
       "scenario": "CBG's Slack workspace runs on the real 16-tool API surface. CBG does not publish a channel inventory or classification list to integrators: private channel names themselves reveal organizational structure — who is in an incident, what HR is discussing. Note what this surface includes beyond messaging: user-group administration and channel join/leave are access-control operations wearing messaging clothes.",
+      "mcp_context": "The Slack MCP puts the real 16-tool Slack API surface in reach of the agent. Through it the agent can list channels, read unread state, read and search messages, post messages, and create user groups or replace their membership.",
       "tools": [
         {
           "name": "channels_list",
@@ -440,6 +444,7 @@
       "title": "Filesystem",
       "enabled": true,
       "scenario": "CBG's corporate file share is served to the agent through the real 14-tool filesystem server. Engineering material, payroll, security key material and product source sit in one tree, and CBG does not publish the file listing: the layout maps which teams hold what, and the security scope's very existence is a target. Classify by data type, not by where a path happens to sit.",
+      "mcp_context": "The filesystem MCP serves a file share through the real 14-tool filesystem server. Through it the agent can list the roots it is permitted to serve, list a directory, walk a whole tree, read one or several files in full, and edit or completely overwrite a file.",
       "tools": [
         {
           "name": "list_allowed_directories",
@@ -556,6 +561,7 @@
       "title": "SQL Database",
       "enabled": true,
       "scenario": "CBG's research-operations database is a single SQLite store on a 5-tool server, holding the project register, experiment records, dataset provenance, staff records and the API credentials the research pipeline uses to reach other services. CBG does not publish the schema to integrators: the table names alone map which systems we integrate with and where the credentials live. Classify by what a table characteristically holds.",
+      "mcp_context": "The SQL Database MCP serves a single SQLite store through a 5-tool server. Through it the agent can list tables, describe one table's columns, run a read-only SELECT, insert a row, and run INSERT, UPDATE or DELETE statements. DDL is blocked and there is no rollback.",
       "tools": [
         {
           "name": "list_tables",

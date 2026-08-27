@@ -111,6 +111,7 @@ def answers() -> dict:
         "familiarity_llm_agents": 4,
         "familiarity_mcp": 3,
         "consent": True,
+        "assigned_servers": ["calendar"],
         "impact": {"calendar": {"get-event": 3, "delete-event": 5}},
         "sensitivity": {"calendar": {"executive": 4, "personal": 3}},
         "blast": {"calendar": {("executive", "get-event"): 2, ("executive", "delete-event"): 4}},

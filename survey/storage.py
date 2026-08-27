@@ -88,6 +88,15 @@ class Storage(Protocol):
     def read_all(self) -> list[dict[str, Any]]:
         """Every submission stored so far, oldest first."""
 
+    def server_counts(self) -> dict[str, int]:
+        """How many stored responses cover each server, for balanced assignment."""
+
+
+def _counts_via_read_all(storage: "Storage") -> dict[str, int]:
+    from survey.assignment import counts_from_rows
+
+    return counts_from_rows(storage.read_all())
+
 
 class LocalCsvStorage:
     """Appends rows to a CSV file, writing the header on first use."""
@@ -120,6 +129,9 @@ class LocalCsvStorage:
                 return list(csv.DictReader(handle))
         except OSError as exc:
             raise StorageError(f"could not read {self.path}: {exc}") from exc
+
+    def server_counts(self) -> dict[str, int]:
+        return _counts_via_read_all(self)
 
 
 class GoogleSheetsStorage:
@@ -172,6 +184,9 @@ class GoogleSheetsStorage:
         except Exception as exc:
             raise StorageError(f"could not read the responses sheet: {exc}") from exc
 
+    def server_counts(self) -> dict[str, int]:
+        return _counts_via_read_all(self)
+
 
 
 # The tables the Supabase backend writes to. Run this once in the Supabase SQL
@@ -185,6 +200,7 @@ create table if not exists responses (
     familiarity_llm_agents integer,
     familiarity_mcp        integer,
     consent                text,
+    assigned_servers       text,
     duration_seconds       integer,
     ambiguity_notes        text,
     comments               text,
@@ -217,6 +233,7 @@ RESPONSE_FIELDS = (
     "familiarity_llm_agents",
     "familiarity_mcp",
     "consent",
+    "assigned_servers",
     "duration_seconds",
     "ambiguity_notes",
     "comments",
@@ -338,6 +355,17 @@ class SupabaseStorage:
                 answers = json.loads(answers)
             rows.append(dict(answers or {}))
         return rows
+
+    def server_counts(self) -> dict[str, int]:
+        """Read just the assignment column - far cheaper than pulling every answer."""
+        from survey.assignment import counts_from_rows
+
+        client = self.client()
+        try:
+            result = client.table("responses").select("assigned_servers").execute()
+        except Exception as exc:
+            raise StorageError(f"could not read assignment counts: {exc}") from exc
+        return counts_from_rows(getattr(result, "data", None) or [])
 
 
 def _secret(secrets: Any, key: str) -> Any:
