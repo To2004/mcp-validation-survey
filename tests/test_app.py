@@ -249,8 +249,10 @@ class TestServerAssignment:
         # Straight to feedback, not to a third server.
         assert any(b.label == "Submit" for b in app.button)
 
-    def test_the_intro_says_how_many_servers_they_will_rate(self):
-        assert "2 of the 5" in page_text(run_app())
+    def test_the_intro_does_not_advertise_that_it_is_a_subset(self):
+        # Participants are not told they see only some servers - it invites
+        # questions about what they are missing and adds nothing to the task.
+        assert "of the 5" not in page_text(run_app())
 
     def test_the_progress_bar_projects_the_full_length_before_assignment(self):
         # The plan is only 2 pages long until a participant starts. Showing that

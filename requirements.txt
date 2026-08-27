@@ -1,3 +1,8 @@
-streamlit>=1.36
+# NOTE: changes under survey/ are NOT picked up by a plain redeploy. Streamlit
+# Cloud re-runs streamlit_app.py in the existing Python process, which keeps the
+# already-imported survey.* modules in sys.modules - so the new entry script runs
+# against the old classes and dies with AttributeError. Reboot the app (Manage app
+# -> "..." -> Reboot app), or touch this file to force a fresh environment.
+streamlit>=1.37
 supabase>=2.4
 gspread>=6.0

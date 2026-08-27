@@ -171,6 +171,26 @@ FORM_CSS = """
       border-top: none;
   }
 
+  /* Text fields: a real border and a focus ring, so it is obvious where to type. */
+  div[data-testid="stTextInput"] div[data-baseweb="input"],
+  div[data-testid="stTextArea"] div[data-baseweb="textarea"],
+  div[data-testid="stTextArea"] div[data-baseweb="base-input"] {
+      background: #ffffff !important;
+      border: 1px solid #b9c4d4 !important;
+      border-radius: 6px !important;
+  }
+  div[data-testid="stTextInput"] div[data-baseweb="input"]:focus-within,
+  div[data-testid="stTextArea"] div[data-baseweb="textarea"]:focus-within,
+  div[data-testid="stTextArea"] div[data-baseweb="base-input"]:focus-within {
+      border-color: var(--accent) !important;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+  }
+  div[data-testid="stTextInput"] input,
+  div[data-testid="stTextArea"] textarea {
+      background: transparent !important;
+      font-size: 16px !important;
+  }
+
   .na-cell {
       text-align: center;
       color: #94a3b8;
@@ -592,15 +612,6 @@ def render_intro(config: SurveyConfig) -> None:
     with st.container(border=True):
         st.markdown('<div class="question-title"><b>About this study</b></div>', unsafe_allow_html=True)
         st.write(config.intro)
-        total = len(config.enabled_servers)
-        per = min(config.servers_per_participant, total)
-        if per < total:
-            st.markdown(
-                f'<div class="howto">To keep the sitting short, you will rate '
-                f'<b>{per} of the {total}</b> MCP servers. Which ones is decided for you '
-                f'when you press Next, balanced across everyone taking part.</div>',
-                unsafe_allow_html=True,
-            )
 
     with question_card("Participant ID", "Enter the participant ID provided by the researcher.", required=True):
         st.text_input("Participant ID", key="participant_id", label_visibility="collapsed")
