@@ -124,7 +124,16 @@ class TestShippedConfig:
 
     def test_no_researcher_key_material_leaked_into_the_config(self):
         text = (REPO_ROOT / "survey_config.json").read_text(encoding="utf-8").lower()
-        for forbidden in ("researcher", "expected level", "five_level_v2", "do not send"):
+        # Match the appendix's own markers, not the bare word "researcher" - asset
+        # descriptions legitimately mention a project's lead researcher.
+        for forbidden in (
+            "researcher appendix",
+            "researcher only",
+            "researcher-only",
+            "expected level",
+            "five_level_v2",
+            "do not send",
+        ):
             assert forbidden not in text
 
     def test_live_cells_are_a_strict_subset_of_the_matrix(self, config):

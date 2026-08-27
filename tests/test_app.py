@@ -222,9 +222,17 @@ class TestStepContext:
         assert "About this MCP server" in text
         assert "About this organization" in text
 
-    def test_the_org_text_is_the_source_form_wording_verbatim(self):
+    def test_the_org_text_keeps_the_source_form_wording(self):
+        # A short description of CBG now leads the organisational context, since the
+        # step asks how sensitive an asset is *to this organization* and CBG was
+        # otherwise never explained. The source form's wording follows it intact.
         server = next(s for s in CONFIG.enabled_servers if s.key == "calendar")
-        assert server.scenario.startswith("CBG's workplace-services team")
+        assert server.scenario.startswith("**CBG — Consolidated Business Group**")
+        assert "CBG's workplace-services team runs the agent" in server.scenario
+
+    def test_every_server_says_who_the_organisation_is(self):
+        for server in CONFIG.enabled_servers:
+            assert "Consolidated Business Group" in server.scenario, server.key
 
     def test_the_mcp_text_does_not_name_the_organisation(self):
         for server in CONFIG.enabled_servers:
