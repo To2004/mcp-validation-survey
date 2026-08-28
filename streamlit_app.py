@@ -209,15 +209,6 @@ FORM_CSS = """
       font-size: 16px !important;
   }
 
-  .rule-line {
-      font-size: 15px;
-      line-height: 1.5;
-      color: var(--ink-soft);
-      padding: 4px 0 4px 18px;
-      position: relative;
-  }
-  .rule-line::before { content: "•"; position: absolute; left: 4px; color: var(--accent); }
-
   .na-cell {
       text-align: center;
       color: #94a3b8;
@@ -571,11 +562,6 @@ def scale_reference(config: SurveyConfig, dimension: str) -> None:
                 f"{examples}</div>",
                 unsafe_allow_html=True,
             )
-        rules = config.scale_rules.get(dimension, [])
-        if rules:
-            st.markdown("**Rules**")
-            for rule in rules:
-                st.markdown(f'<div class="rule-line">{rule}</div>', unsafe_allow_html=True)
 
 
 def radio_grid(config: SurveyConfig, dimension: str, server: Server, items, key_fn, noun: str) -> None:

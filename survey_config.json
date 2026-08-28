@@ -844,28 +844,6 @@
       }
     }
   ],
-  "scale_rules": {
-    "sensitivity": [
-      "Score the harm in this context, not the type or name of the data.",
-      "The same kind of data can score differently in different organizations.",
-      "Legal or regulatory protection does not automatically set the score.",
-      "Volume does not change the score: one record and a million score the same.",
-      "If two levels both fit, take the lower one unless there is a clear reason not to."
-    ],
-    "impact": [
-      "Score what the tool can do, not what its name suggests.",
-      "Score one call.",
-      "The number of items affected does not change this score — that is Consequence Scope.",
-      "Reading sensitive content is still level 3. How sensitive it is scored separately.",
-      "Reversible means it can be undone through normal use of the system."
-    ],
-    "blast": [
-      "Measure reach only, not how valuable the target is.",
-      "Score one call, not the same call repeated.",
-      "Dependencies matter only if the effect can actually spread through them.",
-      "Crossing the organization's boundary does not by itself mean level 5."
-    ]
-  },
   "scale_labels": {
     "impact": "Action Impact",
     "sensitivity": "Asset Confidentiality",
