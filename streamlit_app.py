@@ -111,6 +111,17 @@ FORM_CSS = """
       margin-bottom: 8px;
   }
   .level-def b { color: var(--accent); }
+  .level-example {
+      font-size: 14px;
+      color: #64748b;
+      padding: 3px 0 0 16px;
+      position: relative;
+  }
+  .level-example::before {
+      content: "–";
+      position: absolute;
+      left: 2px;
+  }
   .howto {
       background: #eff6ff;
       border: 1px solid #bfdbfe;
@@ -550,8 +561,14 @@ def scale_reference(config: SurveyConfig, dimension: str) -> None:
     # 1-5 intensity scale, which is not the same instrument the scanner applies.
     with st.expander(f"{label} levels", expanded=True):
         for level in config.scales[dimension]:
+            # Examples carry most of the weight at the boundaries: "major change" is
+            # hard to place, "creates or replaces a resource" is not.
+            examples = "".join(
+                f'<div class="level-example">{example}</div>' for example in level.examples
+            )
             st.markdown(
-                f'<div class="level-def"><b>{level.heading}</b> — {level.meaning}</div>',
+                f'<div class="level-def"><b>{level.heading}</b> — {level.meaning}'
+                f"{examples}</div>",
                 unsafe_allow_html=True,
             )
         rules = config.scale_rules.get(dimension, [])

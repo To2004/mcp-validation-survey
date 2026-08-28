@@ -8,82 +8,142 @@
     "impact": [
       {
         "value": 1,
-        "label": "No material effect",
-        "meaning": "Does not read meaningful content or change meaningful state. Returns service status, a version, or the list of things the service can do."
+        "label": "No Material Effect",
+        "meaning": "Does not read meaningful content or change meaningful state.",
+        "examples": [
+          "Returns service status or version.",
+          "Returns available capabilities."
+        ]
       },
       {
         "value": 2,
         "label": "Metadata",
-        "meaning": "Reads or changes descriptive information without touching the main content: names, IDs, counts, timestamps, status, or a label or flag."
+        "meaning": "Can read or change descriptive information without reading or changing the main content.",
+        "examples": [
+          "Reads names, IDs, counts, timestamps, or status.",
+          "Changes a label, flag, or other descriptive field."
+        ]
       },
       {
         "value": 3,
-        "label": "Content access or limited change",
-        "meaning": "Reads the content of an item, or changes part of an item without replacing it."
+        "label": "Content Access / Limited Change",
+        "meaning": "Can read content or make a limited change.",
+        "examples": [
+          "Reads the content of an item.",
+          "Changes part of an item without replacing it."
+        ]
       },
       {
         "value": 4,
-        "label": "Major change",
-        "meaning": "Creates or makes a major change to data, permissions, configuration or system state — but the change can normally be undone. Creates or replaces a resource."
+        "label": "Major Change",
+        "meaning": "Can create or make a major change to data, permissions, configuration, or system state, but the change can normally be reversed.",
+        "examples": [
+          "Creates or replaces a resource.",
+          "Changes permissions or system configuration."
+        ]
       },
       {
         "value": 5,
-        "label": "Irreversible or consequential",
-        "meaning": "Causes an effect that cannot normally be undone: permanently deletes or overwrites meaningful data, or triggers an action whose effect remains even after the system is restored."
+        "label": "Irreversible / Consequential",
+        "meaning": "Can cause an effect that cannot normally be undone.",
+        "examples": [
+          "Permanently deletes or overwrites meaningful data.",
+          "Triggers an action whose effect remains after the system state is restored."
+        ]
       }
     ],
     "sensitivity": [
       {
         "value": 1,
         "label": "Public",
-        "meaning": "Information that does not need confidentiality — intentionally shared with the public, or shareable without restriction."
+        "meaning": "Information that does not need confidentiality.",
+        "examples": [
+          "Information intentionally shared with the public.",
+          "Information that can be shared without restriction."
+        ]
       },
       {
         "value": 2,
-        "label": "Routine internal",
-        "meaning": "Non-public information whose exposure would have limited impact. Normal information used for internal work, with little value outside the organization."
+        "label": "Routine Internal",
+        "meaning": "Non-public information whose exposure would have limited impact.",
+        "examples": [
+          "Normal information used for internal work.",
+          "Internal descriptive information with little value outside the organization."
+        ]
       },
       {
         "value": 3,
         "label": "Internal",
-        "meaning": "Exposure could cause meaningful harm, but the harm is limited and recoverable — internal plans or information whose exposure could disadvantage the organization."
+        "meaning": "Exposure could cause meaningful harm, but the harm is limited and recoverable.",
+        "examples": [
+          "Internal plans whose exposure could disadvantage the organization.",
+          "Internal information whose exposure could cause operational or reputational harm."
+        ]
       },
       {
         "value": 4,
         "label": "Confidential",
-        "meaning": "Exposure could cause serious harm to a person, to the organization, or to its interests: major business, legal, financial or strategic harm, or records whose exposure could seriously affect a person."
+        "meaning": "Exposure could cause serious harm to a person, organization, or its interests.",
+        "examples": [
+          "Sensitive records whose exposure could seriously affect a person.",
+          "Non-public information whose exposure could cause major business, legal, financial, or strategic harm."
+        ]
       },
       {
         "value": 5,
-        "label": "Strictly confidential",
-        "meaning": "Exposure could cause severe harm, or directly enable unauthorized access, impersonation, fraud or control — secret information that lets someone gain access or authority."
+        "label": "Strictly Confidential",
+        "meaning": "Exposure could cause severe harm or directly enable unauthorized access, impersonation, fraud, or control.",
+        "examples": [
+          "Secret information that lets someone gain access or authority.",
+          "Information whose exposure could cause severe harm to a person or organization."
+        ]
       }
     ],
     "blast": [
       {
         "value": 1,
-        "label": "One item or person",
-        "meaning": "The effect stops at one item or one person, and nothing else depends on the result."
+        "label": "One Item / Person",
+        "meaning": "The effect stops at one item or person.",
+        "examples": [
+          "One call affects one independent resource.",
+          "One person is affected and nothing else depends on the result."
+        ]
       },
       {
         "value": 2,
-        "label": "One scope",
-        "meaning": "The effect stays inside one group or scope. Several people may be affected, but all of them are in that same group."
+        "label": "One Scope",
+        "meaning": "The effect stays within one group or scope.",
+        "examples": [
+          "One call affects several resources in one group.",
+          "Several users are affected, but all are in the same scope."
+        ]
       },
       {
         "value": 3,
-        "label": "Multiple scopes",
-        "meaning": "One call affects several separate groups or scopes."
+        "label": "Multiple Scopes",
+        "meaning": "One call can affect several separate groups or scopes.",
+        "examples": [
+          "One action affects resources from several groups.",
+          "One change affects several separate organizational scopes."
+        ]
       },
       {
         "value": 4,
-        "label": "Organization-wide",
-        "meaning": "One call can affect almost the whole organization — almost all of the people or scopes this asset serves."
+        "label": "Organization-Wide",
+        "meaning": "One call can affect almost the whole organization.",
+        "examples": [
+          "One action changes a setting used across the organization.",
+          "One call affects almost all users or scopes served by the asset."
+        ]
       },
       {
         "value": 5,
         "label": "Cascading",
-        "meaning": "The effect can spread beyond what was directly touched into other systems or scopes: one shared dependency or central resource affecting many things that rely on it."
+        "meaning": "The effect can spread beyond the directly affected scope into other systems or scopes.",
+        "examples": [
+          "A change to one shared dependency affects many dependent systems.",
+          "A change to one central resource causes effects across separate systems."
+        ]
       }
     ]
   },

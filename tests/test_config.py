@@ -163,6 +163,31 @@ class TestShippedConfig:
         with pytest.raises(ConfigError, match="not in the matrix"):
             load_config_from_dict(raw)
 
+    def test_every_level_carries_two_examples(self, config):
+        """The definitions come from the source CSVs, examples included.
+
+        The examples do most of the work at the boundaries: "major change" is hard
+        to place, "creates or replaces a resource" is not.
+        """
+        for dimension, levels in config.scales.items():
+            for level in levels:
+                assert len(level.examples) == 2, (dimension, level.value, level.examples)
+                assert all(e.strip() for e in level.examples), (dimension, level.value)
+
+    def test_level_names_match_the_source_csvs(self, config):
+        assert [l.label for l in config.scales["impact"]] == [
+            "No Material Effect", "Metadata", "Content Access / Limited Change",
+            "Major Change", "Irreversible / Consequential",
+        ]
+        assert [l.label for l in config.scales["sensitivity"]] == [
+            "Public", "Routine Internal", "Internal", "Confidential",
+            "Strictly Confidential",
+        ]
+        assert [l.label for l in config.scales["blast"]] == [
+            "One Item / Person", "One Scope", "Multiple Scopes", "Organization-Wide",
+            "Cascading",
+        ]
+
     def test_no_description_states_the_answer(self, config):
         """Descriptions must say what a thing is, never how bad it would be.
 

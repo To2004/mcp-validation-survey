@@ -38,6 +38,7 @@ class Level:
     value: int
     label: str
     meaning: str
+    examples: tuple[str, ...] = ()
 
     @property
     def heading(self) -> str:
@@ -129,6 +130,7 @@ def _parse_scale(raw: Sequence[dict[str, Any]], where: str) -> tuple[Level, ...]
             value=int(_require(entry, "value", where)),
             label=_require(entry, "label", where),
             meaning=entry.get("meaning", ""),
+            examples=tuple(entry.get("examples", ())),
         )
         for entry in raw
     )
