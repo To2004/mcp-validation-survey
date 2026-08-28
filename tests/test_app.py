@@ -165,6 +165,23 @@ class TestRatingSteps:
         sensitivity_text = page_text(click(app, "Next"))
         assert 'class="grid-head">Virtual asset<' in sensitivity_text
 
+    def test_blast_cells_name_the_level_not_just_the_number(self):
+        app = set_ratings(complete_intro(run_app()), impact_keys("calendar"), 3)
+        app = set_ratings(click(app, "Next"), sensitivity_keys("calendar"), 3)
+        app = click(app, "Next")
+        cell = next(b for b in app.selectbox if b.key.startswith("blast__calendar__"))
+        assert cell.options[:2] == ["1 · One Item / Person", "2 · One Scope"]
+        assert cell.options[-1] == "not sure"
+
+    def test_blast_step_shows_both_tool_and_asset_explanations(self):
+        # The matrix asks about a tool and an asset at once, so both have to be on
+        # screen - the asset column is otherwise a bare hyphenated name.
+        app = set_ratings(complete_intro(run_app()), impact_keys("calendar"), 3)
+        app = set_ratings(click(app, "Next"), sensitivity_keys("calendar"), 3)
+        text = page_text(click(app, "Next"))
+        assert "The assets in this table" in text
+        assert "The tools in this table" in text
+
     def test_blast_step_blocks_until_every_cell_is_rated(self):
         app = set_ratings(complete_intro(run_app()), impact_keys("calendar"), 3)
         app = set_ratings(click(app, "Next"), sensitivity_keys("calendar"), 3)
@@ -240,7 +257,14 @@ class TestStepContext:
         # context describes Google Calendar / GitHub / Slack first, then what
         # this MCP exposes of it.
         for server in CONFIG.enabled_servers:
-            assert "This MCP server puts" in server.mcp_context, server.key
+            assert "This server lets an AI assistant" in server.mcp_context, server.key
+
+    def test_the_context_stays_short(self):
+        # Two paragraphs per server, read twice before any question, is a tax on
+        # attention that the rating grids need more than the preamble does.
+        for server in CONFIG.enabled_servers:
+            assert len(server.scenario) < 400, (server.key, len(server.scenario))
+            assert len(server.mcp_context) < 400, (server.key, len(server.mcp_context))
 
     def test_the_mcp_text_does_not_name_the_organisation(self):
         for server in CONFIG.enabled_servers:

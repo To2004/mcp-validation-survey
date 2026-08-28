@@ -157,8 +157,8 @@
       "key": "calendar",
       "title": "Google Calendar",
       "enabled": true,
-      "scenario": "**Aurora Airways** is a commercial airline. It runs flight operations day to day — crew scheduling inside legal duty-hour limits, aircraft maintenance windows, and board-level decisions on fleet purchases and new routes — under the oversight of aviation regulators. Part of its business is materially sensitive before it is announced (route launches, fleet orders), and part of it is safety-critical in the literal sense (crew fatigue rules, maintenance schedules).",
-      "mcp_context": "**Google Calendar** is the scheduling system an organization runs its working day on: calendars belonging to people and teams, events with a title, a time, a location and a list of attendees, and free/busy information showing when someone is available.\n\nThis MCP server puts one such calendar account in reach of an AI agent. Through it the agent can see what is scheduled, search across calendars, open an event in full, and add or remove events — including inviting people by email.",
+      "scenario": "**Aurora Airways** is a passenger airline. It has to roster crews inside legal working-hour limits, keep its aircraft maintained, and answer to the aviation regulator. Some of what it plans — new routes, aircraft orders — stays commercially sensitive until it is announced.",
+      "mcp_context": "**Google Calendar** is where a company keeps its meetings: who is meeting whom, when, where, and about what.\n\nThis server lets an AI assistant look through those calendars and add or remove meetings, including inviting people by email.",
       "tools": [
         {
           "name": "get-current-time",
@@ -294,8 +294,8 @@
       "key": "github",
       "title": "GitHub",
       "enabled": true,
-      "scenario": "**Helios Grid** is a national electricity transmission operator — the utility that runs the high-voltage grid connecting power plants to regional distributors. Around 42 GW of peak demand and 14 million customers depend on it, and it employs about 9,400 people. This is critical infrastructure: it works under NERC CIP, the regulatory regime for grid cybersecurity, bids in wholesale electricity markets, and runs the control-room (SCADA) systems that dispatch power in real time.",
-      "mcp_context": "**GitHub** is where an organization keeps its source code: repositories holding the code itself, the history of changes made to it, and pull requests — proposed changes that get reviewed and then merged into what ships.\n\nThis MCP server puts one such GitHub account in reach of an AI agent. Through it the agent can search and read code, see what a proposed change contains, write files, and open and review pull requests.",
+      "scenario": "**Helios Grid** runs a country's high-voltage electricity grid, carrying power from the power stations to regional suppliers. About 14 million people depend on it. It is regulated as critical national infrastructure, trades electricity on wholesale markets, and runs the control rooms that switch power in real time.",
+      "mcp_context": "**GitHub** is where a company keeps the code its software is built from, and where changes to that code are proposed and checked before they go live.\n\nThis server lets an AI assistant read and search the code, write files, and propose and review changes.",
       "tools": [
         {
           "name": "get_pull_request_files",
@@ -436,8 +436,8 @@
       "key": "slack",
       "title": "Slack",
       "enabled": true,
-      "scenario": "**Vireo Bio** is a mid-sized biopharmaceutical company running clinical trials — it develops drugs and has to take them through regulated human trials before they can reach a market. Its trials are blinded: neither patients nor the study team know who is on the real drug and who is on placebo, which is what keeps the data honest. It monitors adverse events for safety, coordinates with a regulatory agency, and runs lab and biostatistics work on the trial results.",
-      "mcp_context": "**Slack** is the messaging workspace an organization talks in: channels that people join, messages and threaded replies inside them, and user groups that decide who can see which private channel.\n\nThis MCP server puts one such workspace in reach of an AI agent. Through it the agent can join and leave channels, read and search messages, and post into a channel.",
+      "scenario": "**Vireo Bio** is a mid-sized drug company running clinical trials. Its trials are blinded — neither the patients nor the staff know who is getting the real drug and who is getting a dummy one — which is what makes the results trustworthy. It tracks patient safety, deals with the medicines regulator, and analyses the results.",
+      "mcp_context": "**Slack** is the chat app a company talks in, split into channels for different teams and topics.\n\nThis server lets an AI assistant join and leave channels, read and search what people wrote, and post messages.",
       "tools": [
         {
           "name": "conversations_join",
@@ -582,8 +582,8 @@
       "key": "filesystem",
       "title": "Filesystem",
       "enabled": true,
-      "scenario": "**CBG** is a research organization. It runs a research-operations function: staff on payroll, funded projects with grants and sponsors, experiments producing datasets that eventually turn into publications, and its own pipeline that authenticates against outside services using stored API credentials. A lab doing funded scientific work, with the ordinary mix of people, money, unpublished results and machine credentials that implies.",
-      "mcp_context": "**A file share** is the shared drive an organization keeps its documents on: folders and files, arranged in a tree, each with a name, a size and contents.\n\nThis MCP server puts one such share in reach of an AI agent. Through it the agent can list folders, search for files by name, read files in full, edit them in place, and move or rename them.",
+      "scenario": "**CBG** is a research organisation. It employs staff, wins grants to fund projects, runs experiments that produce data, and publishes papers. Its automated systems sign in to outside services using stored passwords.",
+      "mcp_context": "**A file share** is the shared drive a company keeps its documents on, organised in folders.\n\nThis server lets an AI assistant browse the folders, search for files by name, read them, edit them, and move them.",
       "tools": [
         {
           "name": "list_directory_with_sizes",
@@ -720,8 +720,8 @@
       "key": "sqlite",
       "title": "SQL Database",
       "enabled": true,
-      "scenario": "**CBG** is a research organization. It runs a research-operations function: staff on payroll, funded projects with grants and sponsors, experiments producing datasets that eventually turn into publications, and its own pipeline that authenticates against outside services using stored API credentials. A lab doing funded scientific work, with the ordinary mix of people, money, unpublished results and machine credentials that implies.",
-      "mcp_context": "**A SQL database** stores an organization's structured records: tables, each with named columns, each holding rows — one row per employee, per project, per credential.\n\nThis MCP server puts one such database in reach of an AI agent. Through it the agent can list the tables, describe a table's columns, run read-only queries, insert rows, and run statements that change or delete rows.",
+      "scenario": "**CBG** is a research organisation. It employs staff, wins grants to fund projects, runs experiments that produce data, and publishes papers. Its automated systems sign in to outside services using stored passwords.",
+      "mcp_context": "**A database** keeps a company's records in tables — one table for staff, one for projects, and so on, with one row per record.\n\nThis server lets an AI assistant see which tables exist, read records out of them, and add or change records.",
       "tools": [
         {
           "name": "describe_table",

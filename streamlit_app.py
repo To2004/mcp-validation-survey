@@ -604,19 +604,41 @@ def radio_grid(config: SurveyConfig, dimension: str, server: Server, items, key_
                 )
 
 
-def blast_matrix(server: Server) -> None:
+def blast_option_label(config: SurveyConfig, value: str) -> str:
+    """`"3"` -> `"3 · Multiple Scopes"`. A bare digit is not the rubric."""
+    if value == UNSURE:
+        return "not sure"
+    for level in config.scales["blast"]:
+        if str(level.value) == str(value):
+            return f"{level.value} · {level.label}"
+    return str(value)
+
+
+def blast_matrix(config: SurveyConfig, server: Server) -> None:
     """Tool x asset matrix: a row per tool, a column per virtual asset.
 
     Only pairs the tool actually acts on are rateable; the rest are read-only N/A.
     Live cells start unset, so an unanswered cell stays distinguishable from a
     deliberate 1.
     """
-    with st.expander("What each virtual asset holds", expanded=False):
+    # The matrix asks about a tool and an asset at once, so both explanations have
+    # to be on screen. Collapsed, the asset column was a bare hyphenated name.
+    with st.container(border=True):
+        st.markdown('<div class="grid-head">The assets in this table</div>', unsafe_allow_html=True)
         for asset in server.blast_assets:
             st.markdown(
                 f'<div class="level-def"><b>{asset.name}</b> — {asset.desc}</div>',
                 unsafe_allow_html=True,
             )
+
+    with st.container(border=True):
+        st.markdown('<div class="grid-head">The tools in this table</div>', unsafe_allow_html=True)
+        for tool in server.tools:
+            if tool.name in server.blast_tools:
+                st.markdown(
+                    f'<div class="level-def"><b>{tool.name}</b> — {tool.desc}</div>',
+                    unsafe_allow_html=True,
+                )
 
     description_of = {tool.name: tool.desc for tool in server.tools}
     widths = [3] + [2] * len(server.blast_assets)
@@ -649,9 +671,7 @@ def blast_matrix(server: Server) -> None:
                         key=key,
                         label_visibility="collapsed",
                         placeholder="—",
-                        format_func=lambda value: (
-                            "not sure" if value == UNSURE else value
-                        ),
+                        format_func=lambda value: blast_option_label(config, value),
                         **kwargs,
                     )
 
@@ -721,7 +741,7 @@ def render_step(config: SurveyConfig, server: Server, step: str) -> None:
         st.caption("How sensitive is each of these virtual assets to this organization?")
         radio_grid(config, "sensitivity", server, server.assets, sensitivity_key, "Virtual asset")
     else:
-        blast_matrix(server)
+        blast_matrix(config, server)
 
 
 def render_feedback(config: SurveyConfig) -> None:
