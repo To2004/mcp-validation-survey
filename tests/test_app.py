@@ -170,8 +170,19 @@ class TestRatingSteps:
         app = set_ratings(click(app, "Next"), sensitivity_keys("calendar"), 3)
         app = click(app, "Next")
         cell = next(b for b in app.selectbox if b.key.startswith("blast__calendar__"))
-        assert cell.options[:2] == ["1 · One Item / Person", "2 · One Scope"]
-        assert cell.options[-1] == "not sure"
+        # Short forms in the cells: a closed dropdown in a narrow column truncates
+        # anything longer. The full names stay in the definitions panel.
+        assert cell.options == [
+            "1 · One item", "2 · One scope", "3 · Several scopes",
+            "4 · Org-wide", "5 · Cascading", "not sure",
+        ]
+
+    def test_the_definitions_panel_keeps_the_full_level_names(self):
+        app = set_ratings(complete_intro(run_app()), impact_keys("calendar"), 3)
+        app = set_ratings(click(app, "Next"), sensitivity_keys("calendar"), 3)
+        text = page_text(click(app, "Next"))
+        assert "One Item / Person" in text
+        assert "Organization-Wide" in text
 
     def test_blast_step_shows_both_tool_and_asset_explanations(self):
         # The matrix asks about a tool and an asset at once, so both have to be on

@@ -604,13 +604,26 @@ def radio_grid(config: SurveyConfig, dimension: str, server: Server, items, key_
                 )
 
 
+# Short forms for the matrix cells only. A closed dropdown in one of seven narrow
+# columns truncates anything longer, and a truncated label is worse than a brief
+# one. The full names stay in the definitions panel above the table.
+BLAST_SHORT_LABELS = {
+    1: "One item",
+    2: "One scope",
+    3: "Several scopes",
+    4: "Org-wide",
+    5: "Cascading",
+}
+
+
 def blast_option_label(config: SurveyConfig, value: str) -> str:
-    """`"3"` -> `"3 · Multiple Scopes"`. A bare digit is not the rubric."""
+    """`"3"` -> `"3 · Several scopes"`. A bare digit is not the rubric."""
     if value == UNSURE:
         return "not sure"
     for level in config.scales["blast"]:
         if str(level.value) == str(value):
-            return f"{level.value} · {level.label}"
+            short = BLAST_SHORT_LABELS.get(level.value, level.label)
+            return f"{level.value} · {short}"
     return str(value)
 
 
