@@ -11,6 +11,7 @@ Guides for running and maintaining the MCP Static Scanner Validation Survey app.
 | [editing-the-survey.md](editing-the-survey.md) | Changing questions and regenerating the config |
 | [known-issues.md](known-issues.md) | Discrepancies found in the source Word form |
 | [design-notes.md](design-notes.md) | Why the rating screens look the way they do |
+| [status-2026-08-28.md](status-2026-08-28.md) | Where things stand, what review found, what is still open |
 
 Start with [deployment.md](deployment.md) if you are setting the survey up for the
 first time, and [known-issues.md](known-issues.md) before analysing results.
