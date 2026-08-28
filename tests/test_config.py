@@ -163,6 +163,34 @@ class TestShippedConfig:
         with pytest.raises(ConfigError, match="not in the matrix"):
             load_config_from_dict(raw)
 
+    def test_no_description_states_the_answer(self, config):
+        """Descriptions must say what a thing is, never how bad it would be.
+
+        A description that states a consequence ("revealing it early ruins the
+        trial") or a reassurance ("No file contents") hands the participant the
+        score, and the agreement statistic then measures reading rather than
+        judgement. Independent review found this in 25 of 64 items.
+        """
+        banned = (
+            "anyone can see it", "everyone can read it", "anyone can read them",
+            "ruins the trial", "enough to get into another system",
+            "there is no rollback", "nothing changes", "no file contents",
+            "no cell values", "no columns, no rows", "nothing is merged yet",
+            "leaves the rest untouched", "most sensitive file",
+            "the people who can stop",
+        )
+        for server in config.servers:
+            for item in list(server.tools) + list(server.assets):
+                lowered = item.desc.lower()
+                for phrase in banned:
+                    assert phrase not in lowered, f"{server.key}/{item.name}: {phrase!r}"
+
+    def test_no_description_is_a_placeholder(self, config):
+        # "Whatever X acts on" gives a participant nothing to score.
+        for server in config.servers:
+            for item in list(server.tools) + list(server.assets):
+                assert not item.desc.lower().startswith("whatever"), f"{server.key}/{item.name}"
+
     def test_every_item_has_a_description(self, config):
         for server in config.servers:
             assert all(t.desc for t in server.tools), server.key
