@@ -1,0 +1,62 @@
+# Keeps the Supabase project awake, and shouts if it is not.
+#
+# A free-tier Supabase project pauses after roughly 7 days without database
+# activity. When it pauses the hostname stops resolving and every write fails -
+# silently, from the participant's point of view, at the very end of a 25-minute
+# survey. Worse, a paused project that is later restored came back empty once:
+# both tables and the migration history were gone.
+#
+# This job reaches the database every two days, which resets the inactivity
+# clock, and fails loudly if either table is missing or unreachable. A failed
+# scheduled run emails the repository owner, so silence means healthy.
+#
+# Secrets required (repo -> Settings -> Secrets and variables -> Actions):
+#   SUPABASE_URL         https://<project-ref>.supabase.co
+#   SUPABASE_SECRET_KEY  the sb_secret_... key
+# Update SUPABASE_SECRET_KEY whenever the key is rotated, or this starts failing.
+
+name: Database health
+
+on:
+  schedule:
+    - cron: "0 6 */2 * *" # 06:00 UTC, every second day
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Query both tables
+        env:
+          URL: ${{ secrets.SUPABASE_URL }}
+          KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+        run: |
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then
+            echo "::error::SUPABASE_URL or SUPABASE_SECRET_KEY is not set on this repository."
+            exit 1
+          fi
+
+          failed=0
+          for table in responses ratings; do
+            # -D writes headers to a file; the key is only ever in a header we
+            # send, never in anything printed.
+            status=$(curl -sS --max-time 45 -o /dev/null -D headers.txt \
+                          -w '%{http_code}' \
+                          -H "apikey: $KEY" \
+                          -H "Authorization: Bearer $KEY" \
+                          -H "Prefer: count=exact" \
+                          -H "Range: 0-0" \
+                          "$URL/rest/v1/$table?select=submission_id") || status="000"
+
+            rows=$(grep -i '^content-range:' headers.txt | tr -d '\r' | sed 's#.*/##')
+
+            case "$status" in
+              2*) echo "$table: OK, $rows row(s)" ;;
+              404) echo "::error::$table does not exist. The project may have been reset - recreate the schema before collecting more responses."; failed=1 ;;
+              000) echo "::error::$table unreachable. The project is probably PAUSED - restore it in the Supabase dashboard."; failed=1 ;;
+              *)   echo "::error::$table returned HTTP $status."; failed=1 ;;
+            esac
+          done
+
+          exit $failed
