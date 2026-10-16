@@ -81,7 +81,8 @@ class TestValidation:
         config = load_config_from_dict(raw)
         warnings = lint(config)
         assert any("ghost-asset" in w and "never rated for Asset Sensitivity" in w for w in warnings)
-        assert any("executive" in w and "never appear in the Blast Radius" in w for w in warnings)
+        # A rated asset left out of the matrix is a sampling choice, not a warning.
+        assert not any("executive" in w for w in warnings)
 
     def test_a_consistent_config_lints_clean(self):
         assert lint(load_config_from_dict(minimal())) == []
@@ -117,13 +118,15 @@ class TestShippedConfig:
         # (tools, assets, blast assets, blast tools). Blast tools can be fewer
         # than tools: a tool reaching none of the chosen assets stays in Tool
         # Impact but would contribute a row of nothing but N/A to the matrix.
+        # The Consequence Scope matrix samples 4 tools x 4 assets, every pair live.
         assert shapes == {
-            "calendar": (6, 7, 7, 5),
-            "github": (6, 7, 7, 6),
-            "slack": (6, 7, 7, 6),
-            "filesystem": (6, 7, 7, 6),
-            "sqlite": (5, 7, 7, 4),
+            "calendar": (6, 7, 4, 4),
+            "github": (6, 7, 4, 4),
+            "slack": (6, 7, 4, 4),
+            "filesystem": (6, 7, 4, 4),
+            "sqlite": (5, 7, 4, 4),
         }
+        assert all(len(s.live_blast_cells) == 16 for s in config.servers)
 
     def test_no_researcher_key_material_leaked_into_the_config(self):
         text = (REPO_ROOT / "survey_config.json").read_text(encoding="utf-8").lower()

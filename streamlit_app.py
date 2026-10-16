@@ -20,6 +20,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import streamlit as st
+import streamlit.components.v1 as components
 
 from survey.assignment import choose_servers, format_assigned, parse_assigned
 from survey.config import ConfigError, Server, SurveyConfig, lint, load_config
@@ -49,8 +50,27 @@ FALLBACK_LABELS = {
     "inputs": "Inputs That Change the Risk",
 }
 STEP_NUMBER = {"impact": 1, "sensitivity": 2, "blast": 3, "inputs": 4}
-#: How often the "time so far" line refreshes while a page is open.
-TIMER_REFRESH_SECONDS = 30
+#: Height of the clock's frame, in pixels.
+CLOCK_HEIGHT = 30
+#: The clock ticks in the browser, so the page does not rerun every second. It
+#: starts from the seconds already spent, measured on the server, so a wrong clock
+#: on the participant's machine cannot skew it.
+CLOCK_HTML = """
+<div id="clock" style="font: 600 15px system-ui, sans-serif; color: #334155;
+     text-align: right; font-variant-numeric: tabular-nums;">Time so far 00:00</div>
+<script>
+const opened = Date.now() - {elapsed_ms};
+const pad = n => String(n).padStart(2, "0");
+function tick() {{
+  const s = Math.max(0, Math.floor((Date.now() - opened) / 1000));
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), r = s % 60;
+  document.getElementById("clock").textContent =
+    "Time so far " + (h ? h + ":" + pad(m) : pad(m)) + ":" + pad(r);
+}}
+tick();
+setInterval(tick, 1000);
+</script>
+"""
 #: Column widths of the inputs step: the input, its two answers, then Not sure.
 INPUT_GRID = [3.2, 1.7, 1.7, 1.2]
 
@@ -860,11 +880,10 @@ def render_feedback(config: SurveyConfig) -> None:
 # ------------------------------------------------------------------------- submit
 
 
-@st.fragment(run_every=TIMER_REFRESH_SECONDS)
-def elapsed_timer() -> None:
-    """Time since the participant opened the survey, refreshed every half minute."""
-    minutes = int((time.time() - st.session_state.started_at) // 60)
-    st.caption(f"Time so far: {minutes} min")
+def elapsed_clock() -> None:
+    """A clock of the time since the participant opened the survey, ticking every second."""
+    elapsed_ms = int((time.time() - st.session_state.started_at) * 1000)
+    components.html(CLOCK_HTML.format(elapsed_ms=elapsed_ms), height=CLOCK_HEIGHT)
 
 
 def submit(config: SurveyConfig) -> None:
@@ -1001,7 +1020,7 @@ def main() -> None:
         total = 2 + steps * per
     st.progress((index + 1) / total, text=f"Section {index + 1} of {total}")
     if config.show_timer:
-        elapsed_timer()
+        elapsed_clock()
 
     if kind == "intro":
         render_intro(config)

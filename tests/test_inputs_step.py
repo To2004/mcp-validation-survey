@@ -106,8 +106,11 @@ class TestStorage:
         assert parse_rating_column("input__github__create_pull_request__base") == (
             "inputs", "github", "base", "create_pull_request")
 
-    def test_seconds_columns_are_metadata_not_ratings(self):
-        assert parse_rating_column("seconds__github__impact") is None
+    def test_page_times_are_stored_as_rows_with_the_seconds_as_number(self):
+        assert parse_rating_column("seconds__github__impact") == ("seconds", "github", "impact", "")
+        assert parse_rating_column("seconds__intro") == ("seconds", "", "intro", "")
+        payload = rating_payloads({"submission_id": "s", "seconds__intro": 42})
+        assert payload[0]["value_num"] == 42 and payload[0]["dimension"] == "seconds"
 
     def test_an_input_answer_has_no_number(self):
         payload = rating_payloads({"submission_id": "s",

@@ -62,8 +62,12 @@ Blast Radius is the reach of a tool over an asset and needs both.
   `step_prompts.inputs` and `input_choices` (`{"changes": "...", "no_change": "..."}`,
   the two answer labels; "Not sure" is always added). Never put the scanner's own
   answer in an entry: the config is participant-facing.
-* `show_timer` (top level, default `true`) shows the time so far on every page. The
-  seconds per page are recorded either way.
+* `show_timer` (top level, default `true`) shows a clock of the time so far on every
+  page. The seconds per page are recorded either way.
+* The Consequence Scope matrix (`blast`) samples 4 of the server's tools and 4 of its
+  assets, chosen so that every pair is live: two tools that read and two that write,
+  assets from the least to the most sensitive. The other steps keep all 6 tools and 7
+  assets.
 * `blast.live` lists the pairs the tool actually acts on, taken from the scanner's own
   `blast_radius` map (a non-null entry means live). Every other cell renders read-only
   as N/A. A tool with no live pair should be left out of `blast.tools` entirely.

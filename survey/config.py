@@ -287,17 +287,13 @@ def lint(config: SurveyConfig) -> list[str]:
         rated = {asset.name for asset in server.assets}
         in_matrix = {asset.name for asset in server.blast_assets}
         only_matrix = sorted(in_matrix - rated)
-        only_rated = sorted(rated - in_matrix)
+        # The matrix samples 4 of the rated assets on purpose, so a rated asset left
+        # out of it is not a warning; a matrix asset that is never rated still is.
         if only_matrix:
             warnings.append(
                 f"{server.title}: {len(only_matrix)} asset(s) appear in the Blast Radius "
                 f"matrix but are never rated for Asset Sensitivity — "
                 f"{', '.join(only_matrix)}. No sensitivity x blast pairing is possible for them."
-            )
-        if only_rated:
-            warnings.append(
-                f"{server.title}: {len(only_rated)} asset(s) are rated for Asset Sensitivity "
-                f"but never appear in the Blast Radius matrix — {', '.join(only_rated)}."
             )
     return warnings
 

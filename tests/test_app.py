@@ -148,11 +148,12 @@ class TestRatingSteps:
         app = set_ratings(click(app, "Next"), sensitivity_keys("calendar"), 3)
         app = click(app, "Next")
         cells = [b for b in app.selectbox if b.key and b.key.startswith("blast__calendar__")]
-        assert len(cells) == 33  # only the live pairs are rateable
+        assert len(cells) == 16  # only the live pairs are rateable
         assert all(cell.value is None for cell in cells)  # nothing preselected
         assert all("N/A" not in cell.options for cell in cells)
-        # The rest of the 5x7 grid is rendered read-only.
-        assert page_text(app).count('class="na-cell"') == 35 - 33
+        # The 4x4 sample is chosen with every pair live, so no cell is read-only;
+        # dead cells are covered by the schema tests.
+        assert page_text(app).count('class="na-cell"') == 0
 
     def test_blast_matrix_is_laid_out_with_tools_as_rows_and_assets_as_columns(self):
         app = set_ratings(complete_intro(run_app()), impact_keys("calendar"), 3)
@@ -161,7 +162,7 @@ class TestRatingSteps:
         text = page_text(app)
         assert "Tool \ Virtual asset" in text
         # Column headers are the matrix assets; row headings are the tools.
-        for asset in ("exec-calendar", "crew-roster", "holidays"):
+        for asset in ("exec-calendar", "crew-roster", "regulator-visits"):
             assert f'class="grid-head">{asset}<' in text
         for tool in ("list-events", "delete-event"):
             assert f"<b>{tool}</b>" in text
@@ -208,7 +209,7 @@ class TestRatingSteps:
         app = set_ratings(complete_intro(run_app()), impact_keys("calendar"), 3)
         app = set_ratings(click(app, "Next"), sensitivity_keys("calendar"), 3)
         app = click(click(app, "Next"), "Next")
-        assert "33 of 33 tool/asset cells are not yet rated" in errors(app)
+        assert "16 of 16 tool/asset cells are not yet rated" in errors(app)
 
     def test_scoring_only_some_blast_cells_still_blocks(self):
         app = set_ratings(complete_intro(run_app()), impact_keys("calendar"), 3)
@@ -216,7 +217,7 @@ class TestRatingSteps:
         app = click(app, "Next")
         next(b for b in app.selectbox if b.key.startswith("blast__calendar__")).set_value("4")
         app = click(app.run(), "Next")
-        assert "32 of 33 tool/asset cells are not yet rated" in errors(app)
+        assert "15 of 16 tool/asset cells are not yet rated" in errors(app)
         assert app.session_state["page"] == 3
 
     def test_scoring_every_blast_cell_unblocks_the_step(self):
@@ -550,6 +551,9 @@ class TestInputsStep:
 
 
 class TestTimer:
-    def test_the_elapsed_time_is_shown(self):
-        app = run_app()
-        assert any("Time so far" in c.value for c in app.caption)
+    def test_the_clock_is_on_the_page_and_starts_from_the_time_spent(self):
+        import streamlit_app
+
+        html = streamlit_app.CLOCK_HTML.format(elapsed_ms=65_000)
+        assert "Time so far" in html and "Date.now() - 65000" in html
+        assert not run_app().exception

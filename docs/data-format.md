@@ -39,8 +39,16 @@ input__<server>__<tool>__<input>    input__calendar__create-event__timeZone
 After the rating columns, one column per page holds the seconds spent on it, summed
 over visits (Back, then Next, adds both): `seconds__intro`, `seconds__<server>__<step>`
 (steps `impact`, `sensitivity`, `blast`, `inputs`) and `seconds__feedback`. A page the
-participant never saw is blank. These columns live in the `answers` JSON of the
-`responses` table; they are not rows of `ratings`.
+participant never saw is blank. In the database each page time is also a row of
+`ratings` with `dimension = 'seconds'`, the page in `asset` (`intro`, `impact`, …,
+`feedback`), the server in `server` (blank for intro and feedback) and the seconds in
+`value_num`:
+
+```sql
+select server, asset as page, avg(value_num) as mean_seconds, count(*) as n
+from ratings where dimension = 'seconds' and value_num is not null
+group by server, asset order by server, asset;
+```
 
 Server keys are `calendar`, `github`, `slack`, `filesystem`, `sqlite`. The `__`
 separator never appears inside a tool or asset name; the config loader rejects any

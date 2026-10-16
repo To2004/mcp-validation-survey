@@ -19,8 +19,10 @@ an account.
   of a few tools, does the input's value change the risk of a call significantly?
   Each participant is assigned **2 of the 5**, balanced so coverage stays
   even across the study — set `servers_per_participant` in `survey_config.json`.
-* Shows the time so far at the top of each page, and records the seconds spent on
-  each page with the response (`show_timer` in the config turns the display off).
+* Shows a clock of the time so far at the top of each page (`show_timer` in the config
+  turns it off), and stores the seconds spent on each page in the database.
+* Keeps the Consequence Scope matrix small: 4 tools x 4 assets per server, every pair
+  one the tool really acts on.
 * Stores every **completed** submission in Supabase (Postgres) — one row per
   participant plus one row per individual rating — and exports both wide and
   long-format CSV. Abandoned sessions are not stored.
@@ -75,6 +77,7 @@ sens__<server>__<asset>             e.g. sens__calendar__executive
 blast__<server>__<asset>__<tool>    e.g. blast__calendar__executive__get-event
 input__<server>__<tool>__<input>    e.g. input__calendar__create-event__timeZone
 seconds__<page>                     e.g. seconds__calendar__inputs, seconds__intro
+                                    (also rows of the ratings table, dimension seconds)
 ```
 
 Every rating a participant makes is `1`–`5`; an inputs answer is `changes`, `no_change`

@@ -220,7 +220,6 @@
         "tools": [
           "list-events",
           "get-event",
-          "search-events",
           "create-event",
           "delete-event"
         ],
@@ -228,10 +227,6 @@
           {
             "name": "team-calendar",
             "desc": "The shared calendar a ground-operations team uses to book its internal meetings, with titles, times and who is attending."
-          },
-          {
-            "name": "event-records",
-            "desc": "An individual calendar entry: its title, time, location, and the list of people invited."
           },
           {
             "name": "crew-roster",
@@ -242,16 +237,8 @@
             "desc": "The senior leaders' calendar: board meetings, and meetings about buying aircraft and starting new routes, held before those plans are announced."
           },
           {
-            "name": "maintenance-schedule",
-            "desc": "When each aircraft goes into the hangar for checks, and how long it is out of service."
-          },
-          {
             "name": "regulator-visits",
             "desc": "Dates and times of audits and inspections by the government body that licenses the airline to fly."
-          },
-          {
-            "name": "holidays",
-            "desc": "The list of national public holiday dates that appears on staff calendars."
           }
         ],
         "live": [
@@ -259,35 +246,18 @@
           "crew-roster|delete-event",
           "crew-roster|get-event",
           "crew-roster|list-events",
-          "crew-roster|search-events",
           "exec-calendar|create-event",
           "exec-calendar|delete-event",
           "exec-calendar|get-event",
           "exec-calendar|list-events",
-          "exec-calendar|search-events",
-          "maintenance-schedule|create-event",
-          "maintenance-schedule|delete-event",
-          "maintenance-schedule|get-event",
-          "maintenance-schedule|list-events",
-          "maintenance-schedule|search-events",
           "regulator-visits|create-event",
           "regulator-visits|delete-event",
           "regulator-visits|get-event",
           "regulator-visits|list-events",
-          "regulator-visits|search-events",
           "team-calendar|create-event",
           "team-calendar|delete-event",
           "team-calendar|get-event",
-          "team-calendar|list-events",
-          "team-calendar|search-events",
-          "event-records|create-event",
-          "event-records|delete-event",
-          "event-records|get-event",
-          "event-records|list-events",
-          "event-records|search-events",
-          "holidays|get-event",
-          "holidays|list-events",
-          "holidays|search-events"
+          "team-calendar|list-events"
         ]
       },
       "inputs": [
@@ -407,12 +377,10 @@
       ],
       "blast": {
         "tools": [
-          "get_pull_request_files",
           "list_pull_requests",
           "search_code",
           "create_or_update_file",
-          "create_pull_request",
-          "create_pull_request_review"
+          "create_pull_request"
         ],
         "assets": [
           {
@@ -428,18 +396,6 @@
             "desc": "The software connecting the control room to the equipment out on the power grid, through which power is switched on and off."
           },
           {
-            "name": "pull-requests-and-reviews",
-            "desc": "Proposed edits to the software, each showing the exact lines being changed, who wrote them, and the comments of the people checking them."
-          },
-          {
-            "name": "operations-runbooks",
-            "desc": "Step-by-step instructions for switching power around and updating systems, plus the records regulators ask to see."
-          },
-          {
-            "name": "pull-request-records",
-            "desc": "A single proposed edit to the software: the lines it changes, the description written with it, and any review comments on it."
-          },
-          {
             "name": "public-site",
             "desc": "The company's public website and its network status page."
           }
@@ -447,41 +403,20 @@
         "live": [
           "infra-config|create_or_update_file",
           "infra-config|create_pull_request",
-          "infra-config|create_pull_request_review",
-          "infra-config|get_pull_request_files",
           "infra-config|list_pull_requests",
           "infra-config|search_code",
           "market-bidding-engine|create_or_update_file",
           "market-bidding-engine|create_pull_request",
-          "market-bidding-engine|create_pull_request_review",
-          "market-bidding-engine|get_pull_request_files",
           "market-bidding-engine|list_pull_requests",
           "market-bidding-engine|search_code",
-          "operations-runbooks|create_or_update_file",
-          "operations-runbooks|create_pull_request",
-          "operations-runbooks|create_pull_request_review",
-          "operations-runbooks|get_pull_request_files",
-          "operations-runbooks|list_pull_requests",
-          "operations-runbooks|search_code",
           "public-site|create_or_update_file",
           "public-site|create_pull_request",
           "public-site|list_pull_requests",
           "public-site|search_code",
           "scada-gateway|create_or_update_file",
           "scada-gateway|create_pull_request",
-          "scada-gateway|create_pull_request_review",
-          "scada-gateway|get_pull_request_files",
           "scada-gateway|list_pull_requests",
-          "scada-gateway|search_code",
-          "pull-request-records|create_pull_request",
-          "pull-request-records|create_pull_request_review",
-          "pull-request-records|get_pull_request_files",
-          "pull-request-records|list_pull_requests",
-          "pull-requests-and-reviews|create_pull_request",
-          "pull-requests-and-reviews|create_pull_request_review",
-          "pull-requests-and-reviews|get_pull_request_files",
-          "pull-requests-and-reviews|list_pull_requests",
-          "pull-requests-and-reviews|search_code"
+          "scada-gateway|search_code"
         ]
       },
       "inputs": [
@@ -604,9 +539,7 @@
           "conversations_join",
           "conversations_add_message",
           "conversations_history",
-          "conversations_replies",
-          "conversations_search_messages",
-          "conversations_leave"
+          "conversations_search_messages"
         ],
         "assets": [
           {
@@ -614,20 +547,8 @@
             "desc": "The channel where the engineers who build the trial's data-collection system discuss their work: bugs, releases, and questions about how the system stores data."
           },
           {
-            "name": "lab-and-statistics",
-            "desc": "Chat about lab results, checks that the tests are working properly, and the statistics being run on the trial."
-          },
-          {
-            "name": "regulator-correspondence",
-            "desc": "Messages about what the company is submitting to the medicines regulator, and what the regulator says back."
-          },
-          {
             "name": "patient-safety-reports",
             "desc": "Reports of patients being harmed during the trial, including details identifying the patient."
-          },
-          {
-            "name": "trial-operations",
-            "desc": "Running the trial day to day: opening new hospital sites, signing up patients, and problems with following the plan."
           },
           {
             "name": "unblinding-requests",
@@ -642,43 +563,18 @@
           "announcements|conversations_add_message",
           "announcements|conversations_history",
           "announcements|conversations_join",
-          "announcements|conversations_replies",
           "announcements|conversations_search_messages",
           "eng-platform|conversations_add_message",
           "eng-platform|conversations_history",
           "eng-platform|conversations_join",
-          "eng-platform|conversations_leave",
-          "eng-platform|conversations_replies",
           "eng-platform|conversations_search_messages",
-          "lab-and-statistics|conversations_add_message",
-          "lab-and-statistics|conversations_history",
-          "lab-and-statistics|conversations_join",
-          "lab-and-statistics|conversations_leave",
-          "lab-and-statistics|conversations_replies",
-          "lab-and-statistics|conversations_search_messages",
-          "regulator-correspondence|conversations_add_message",
-          "regulator-correspondence|conversations_history",
-          "regulator-correspondence|conversations_join",
-          "regulator-correspondence|conversations_leave",
-          "regulator-correspondence|conversations_replies",
-          "regulator-correspondence|conversations_search_messages",
           "patient-safety-reports|conversations_add_message",
           "patient-safety-reports|conversations_history",
           "patient-safety-reports|conversations_join",
-          "patient-safety-reports|conversations_leave",
-          "patient-safety-reports|conversations_replies",
           "patient-safety-reports|conversations_search_messages",
-          "trial-operations|conversations_add_message",
-          "trial-operations|conversations_history",
-          "trial-operations|conversations_join",
-          "trial-operations|conversations_leave",
-          "trial-operations|conversations_replies",
-          "trial-operations|conversations_search_messages",
           "unblinding-requests|conversations_add_message",
           "unblinding-requests|conversations_history",
           "unblinding-requests|conversations_join",
-          "unblinding-requests|conversations_leave",
-          "unblinding-requests|conversations_replies",
           "unblinding-requests|conversations_search_messages"
         ]
       },
@@ -799,11 +695,9 @@
       ],
       "blast": {
         "tools": [
-          "list_directory_with_sizes",
           "move_file",
           "search_files",
           "read_file",
-          "read_multiple_files",
           "edit_file"
         ],
         "assets": [
@@ -816,59 +710,30 @@
             "desc": "Working documents for projects: plans, lists of faults, notes."
           },
           {
-            "name": "file-contents",
-            "desc": "The text inside a document on the shared drive — anything from a meeting note to a staff record, depending on which file is opened."
-          },
-          {
             "name": "product-source",
             "desc": "The software the organisation writes and runs, in the exact version currently in use."
           },
           {
-            "name": "directory-records",
-            "desc": "A folder on the shared drive: its name, its position in the drive, and the files filed under it."
-          },
-          {
             "name": "payroll-records",
             "desc": "What every member of staff is paid, one row per person."
-          },
-          {
-            "name": "directory-structure",
-            "desc": "The complete list of every folder and file name on the shared drive, arranged as they are filed."
           }
         ],
         "live": [
-          "directory-records|list_directory_with_sizes",
-          "directory-records|move_file",
-          "directory-records|search_files",
-          "directory-structure|list_directory_with_sizes",
-          "directory-structure|search_files",
-          "file-contents|edit_file",
-          "file-contents|move_file",
-          "file-contents|read_file",
-          "file-contents|read_multiple_files",
-          "file-contents|search_files",
           "onboarding-material|edit_file",
-          "onboarding-material|list_directory_with_sizes",
           "onboarding-material|move_file",
           "onboarding-material|read_file",
-          "onboarding-material|read_multiple_files",
           "onboarding-material|search_files",
           "payroll-records|edit_file",
           "payroll-records|move_file",
           "payroll-records|read_file",
-          "payroll-records|read_multiple_files",
           "payroll-records|search_files",
           "product-source|edit_file",
-          "product-source|list_directory_with_sizes",
           "product-source|move_file",
           "product-source|read_file",
-          "product-source|read_multiple_files",
           "product-source|search_files",
           "project-material|edit_file",
-          "project-material|list_directory_with_sizes",
           "project-material|move_file",
           "project-material|read_file",
-          "project-material|read_multiple_files",
           "project-material|search_files"
         ]
       },
@@ -996,20 +861,8 @@
             "desc": "The passwords the organisation's software uses to sign in to outside services on its own behalf."
           },
           {
-            "name": "datasets",
-            "desc": "Research data that has not been published yet, and notes on where it came from."
-          },
-          {
             "name": "employees",
             "desc": "Staff records — name, email, job, department and salary."
-          },
-          {
-            "name": "experiments",
-            "desc": "A log of experiments that were run: which project, which data, when it started, and how it went."
-          },
-          {
-            "name": "grants",
-            "desc": "Money awarded to fund research: who gave it, how much, and for how long."
           },
           {
             "name": "projects",
@@ -1025,22 +878,10 @@
           "api_keys|insert_row",
           "api_keys|read_query",
           "api_keys|write_query",
-          "datasets|describe_table",
-          "datasets|insert_row",
-          "datasets|read_query",
-          "datasets|write_query",
           "employees|describe_table",
           "employees|insert_row",
           "employees|read_query",
           "employees|write_query",
-          "experiments|describe_table",
-          "experiments|insert_row",
-          "experiments|read_query",
-          "experiments|write_query",
-          "grants|describe_table",
-          "grants|insert_row",
-          "grants|read_query",
-          "grants|write_query",
           "projects|describe_table",
           "projects|insert_row",
           "projects|read_query",

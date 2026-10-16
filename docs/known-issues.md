@@ -10,9 +10,9 @@ The v9 form rated one asset set for Asset Sensitivity and a different one for Bl
 Radius, so several assets had a blast score with no sensitivity score and vice versa.
 
 Fixed. The survey content is now generated from the scanner's own results rather than
-from the form, and each server presents the **same seven assets** in both steps.
-`lint()` reports nothing, and a human `confidentiality x scope` value can be computed
-for every asset.
+from the form. Asset Confidentiality rates all seven assets of a server; the
+Consequence Scope matrix samples four of them (with four tools), so a human
+`confidentiality x scope` value exists for those four. `lint()` reports nothing.
 
 ## 2. Blast Radius level 5 — RESOLVED
 
