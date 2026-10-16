@@ -17,6 +17,11 @@ COLUMN_SEPARATOR = "__"
 
 _REQUIRED_TOP_LEVEL = ("title", "subtitle", "intro", "consent", "scales", "step_prompts", "servers")
 _DIMENSIONS = ("impact", "sensitivity", "blast")
+#: The step that asks which tool inputs can change the risk. It has no 1-5 scale and
+#: is shown only for servers whose config lists `inputs`.
+INPUTS_STEP = "inputs"
+#: Example values shown next to each input, so a participant sees what it holds.
+INPUT_EXAMPLES = 2
 
 
 class ConfigError(ValueError):
@@ -46,8 +51,20 @@ class Level:
 
 
 @dataclass(frozen=True)
+class InputItem:
+    """One input of one tool, asked about in the "which inputs change the risk" step."""
+
+    tool: str
+    tool_desc: str
+    input: str
+    desc: str
+    examples: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class Server:
-    """One MCP server section: three rating steps over its tools and assets."""
+    """One MCP server section: three rating steps over its tools and assets, and an
+    optional fourth asking which tool inputs can change the risk."""
 
     key: str
     title: str
@@ -59,6 +76,15 @@ class Server:
     blast_tools: tuple[str, ...]
     blast_assets: tuple[Item, ...]
     blast_live: frozenset[tuple[str, str]]
+    inputs: tuple[InputItem, ...] = ()
+
+    @property
+    def input_tools(self) -> list[tuple[str, str]]:
+        """(tool, tool description) for each tool with inputs, in config order."""
+        seen: dict[str, str] = {}
+        for item in self.inputs:
+            seen.setdefault(item.tool, item.tool_desc)
+        return list(seen.items())
 
     @property
     def blast_cells(self) -> list[tuple[str, str]]:
@@ -90,6 +116,8 @@ class SurveyConfig:
     servers_per_participant: int
     scale_labels: dict[str, str]
     scale_rules: dict[str, tuple[str, ...]]
+    input_choices: dict[str, str] | None = None
+    show_timer: bool = True
 
     @property
     def enabled_servers(self) -> tuple[Server, ...]:
@@ -139,6 +167,23 @@ def _parse_scale(raw: Sequence[dict[str, Any]], where: str) -> tuple[Level, ...]
     return levels
 
 
+def _parse_inputs(raw: Sequence[dict[str, Any]], where: str) -> tuple[InputItem, ...]:
+    """The `inputs` rows of one server: each a tool, an input of it and example values."""
+    items = []
+    for entry in raw:
+        tool = _check_name(_require(entry, "tool", where), f"{where} tool")
+        name = _check_name(_require(entry, "input", where), f"{where} input")
+        examples = tuple(str(e) for e in _require(entry, "examples", where))
+        if len(examples) != INPUT_EXAMPLES:
+            raise ConfigError(f"{where}: {tool}.{name} needs exactly {INPUT_EXAMPLES} examples")
+        items.append(InputItem(tool=tool, tool_desc=entry.get("tool_desc", ""), input=name,
+                               desc=_require(entry, "desc", where), examples=examples))
+    pairs = [(item.tool, item.input) for item in items]
+    if len(pairs) != len(set(pairs)):
+        raise ConfigError(f"{where}: an input is listed twice for the same tool")
+    return tuple(items)
+
+
 def _parse_server(raw: dict[str, Any]) -> Server:
     key = _check_name(_require(raw, "key", "server"), "server key")
     where = f"server {key!r}"
@@ -180,6 +225,7 @@ def _parse_server(raw: dict[str, Any]) -> Server:
         blast_tools=blast_tools,
         blast_assets=blast_assets,
         blast_live=frozenset(blast_live),
+        inputs=_parse_inputs(raw.get("inputs", []), f"{where} inputs"),
     )
 
 
@@ -201,6 +247,13 @@ def load_config_from_dict(raw: dict[str, Any]) -> SurveyConfig:
     if not any(server.enabled for server in servers):
         raise ConfigError("config: at least one enabled server is required")
 
+    choices = raw.get("input_choices")
+    if any(server.inputs for server in servers):
+        _require(prompts_raw, INPUTS_STEP, "step_prompts")
+        if not (isinstance(choices, dict) and {"changes", "no_change"} <= set(choices)):
+            raise ConfigError("config: input_choices needs the labels 'changes' and 'no_change'")
+        prompts[INPUTS_STEP] = prompts_raw[INPUTS_STEP]
+
     per_participant = int(raw.get("servers_per_participant", len(servers)))
     if per_participant < 1:
         raise ConfigError("config: servers_per_participant must be at least 1")
@@ -218,6 +271,8 @@ def load_config_from_dict(raw: dict[str, Any]) -> SurveyConfig:
         scale_rules={
             dim: tuple(rules) for dim, rules in raw.get("scale_rules", {}).items()
         },
+        input_choices=dict(choices) if isinstance(choices, dict) else None,
+        show_timer=bool(raw.get("show_timer", True)),
     )
 
 

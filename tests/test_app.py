@@ -32,6 +32,11 @@ def blast_keys(server_key: str) -> list[str]:
     return [f"blast__{server_key}__{asset}__{tool}" for asset, tool in server.live_blast_cells]
 
 
+def inputs_keys(server_key: str) -> list[str]:
+    server = next(s for s in CONFIG.enabled_servers if s.key == server_key)
+    return [f"inputs__{server_key}__{item.tool}__{item.input}" for item in server.inputs]
+
+
 def run_app(**secrets) -> AppTest:
     app = AppTest.from_file(str(APP_PATH), default_timeout=60)
     for key, value in secrets.items():
@@ -86,15 +91,21 @@ def complete_intro(app: AppTest, participant: str = "P01", assign=("calendar",))
     return click(app.run(), "Next")
 
 
-def complete_server_steps(app: AppTest, server_key: str, *, blast_value: str = "2") -> AppTest:
-    """Walk one server's three steps, rating everything, leaving the app on the next page."""
+def complete_server_steps(app: AppTest, server_key: str, *, blast_value: str = "2",
+                          input_value: str = "changes") -> AppTest:
+    """Walk one server's steps, answering everything, leaving the app on the next page."""
     app = set_ratings(app, impact_keys(server_key), 3)
     app = click(app, "Next")
     app = set_ratings(app, sensitivity_keys(server_key), 3)
     app = click(app, "Next")
     for key in blast_keys(server_key):
         app.session_state[key] = blast_value
-    return click(app.run(), "Next")
+    app = click(app.run(), "Next")
+    if inputs_keys(server_key):
+        for key in inputs_keys(server_key):
+            app.session_state[key] = input_value
+        app = click(app.run(), "Next")
+    return app
 
 
 class TestIntroPage:
@@ -290,7 +301,7 @@ class TestServerAssignment:
 
     def test_the_wizard_only_covers_the_assigned_servers(self):
         app = complete_intro(run_app(), assign=None)
-        # intro + 3 steps for each of 2 servers + feedback
+        # intro + 4 steps for each of 2 servers + feedback
         assert app.session_state["page"] == 1
         assigned = app.session_state["assigned"]
         assert len(assigned) == 2
@@ -307,15 +318,15 @@ class TestServerAssignment:
 
     def test_the_progress_bar_projects_the_full_length_before_assignment(self):
         # The plan is only 2 pages long until a participant starts. Showing that
-        # would tell them the survey is a quarter of its real length: 1 of 8, not
-        # 1 of 2, so the bar reads 12% rather than 50%.
+        # would tell them the survey is a fifth of its real length: 1 of 10, not
+        # 1 of 2, so the bar reads 10% rather than 50%.
         app = run_app()
         assert not app.session_state["assigned"]
-        assert app.get("progress")[0].value == int(100 / 8)
+        assert app.get("progress")[0].value == int(100 / 10)
 
     def test_the_progress_bar_matches_the_plan_once_assigned(self):
         app = complete_intro(run_app(), assign=None)
-        assert app.get("progress")[0].value == int(100 * 2 / 8)
+        assert app.get("progress")[0].value == int(100 * 2 / 10)
 
     def test_assignment_is_recorded_with_the_response(self, tmp_path):
         import csv
@@ -490,3 +501,55 @@ class TestResearcherPanel:
         app.run()
         assert not app.exception
         assert "Researcher panel" not in [t.value for t in app.title]
+
+
+class TestInputsStep:
+    """The fourth step: which inputs of a tool can change the risk."""
+
+    def _open(self, server_key: str = "calendar") -> AppTest:
+        app = complete_intro(run_app(), assign=(server_key,))
+        app = set_ratings(app, impact_keys(server_key), 3)
+        app = click(app, "Next")
+        app = set_ratings(app, sensitivity_keys(server_key), 3)
+        app = click(app, "Next")
+        for key in blast_keys(server_key):
+            app.session_state[key] = "2"
+        return click(app.run(), "Next")
+
+    def test_the_step_shows_one_card_per_tool_with_example_values(self):
+        app = self._open()
+        text = page_text(app)
+        assert "Inputs That Change the Risk" in text
+        server = next(s for s in CONFIG.enabled_servers if s.key == "calendar")
+        for item in server.inputs:
+            assert item.input in text and item.examples[0] in text
+
+    def test_next_is_blocked_until_every_input_is_answered(self):
+        app = click(self._open(), "Next")
+        assert "Inputs That Change the Risk" in errors(app)
+
+    def test_clicking_an_answer_records_it(self):
+        app = self._open()
+        key = inputs_keys("calendar")[0]
+        app = click(app, "Changes the risk significantly")
+        assert app.session_state[key] == "changes"
+
+    def test_answers_and_page_times_reach_the_stored_row(self, tmp_path):
+        import csv
+
+        path = tmp_path / "responses.csv"
+        app = complete_intro(run_app(responses_csv_path=str(path)), assign=("calendar",))
+        app = complete_server_steps(app, "calendar", input_value="no_change")
+        app = click(app, "Submit")
+        assert not app.exception
+        row = next(csv.DictReader(path.open()))
+        assert all(row[f"input__calendar__{k.split('__', 2)[2]}"] == "no_change"
+                   for k in inputs_keys("calendar"))
+        assert row["seconds__intro"] != "" and row["seconds__calendar__inputs"] != ""
+        assert row["seconds__github__impact"] == ""  # not assigned, so never seen
+
+
+class TestTimer:
+    def test_the_elapsed_time_is_shown(self):
+        app = run_app()
+        assert any("Time so far" in c.value for c in app.caption)

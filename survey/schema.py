@@ -21,7 +21,7 @@ from __future__ import annotations
 from typing import Any, Iterable, Sequence
 
 from survey.assignment import format_assigned, parse_assigned
-from survey.config import COLUMN_SEPARATOR, Server, SurveyConfig
+from survey.config import COLUMN_SEPARATOR, INPUTS_STEP, Server, SurveyConfig
 
 NOT_APPLICABLE = "N/A"
 # A participant who cannot judge an item says so, rather than guessing. This is an
@@ -42,6 +42,13 @@ METADATA_COLUMNS = (
 )
 FEEDBACK_COLUMNS = ("ambiguity_notes", "comments", "confidence")
 
+# Answers to the "which inputs change the risk" step. Not sure is UNSURE, as elsewhere.
+INPUT_CHANGES = "changes"
+INPUT_NO_CHANGE = "no_change"
+INPUT_VALUES = (INPUT_CHANGES, INPUT_NO_CHANGE, UNSURE)
+#: The rating steps in page order, for the per-page time columns.
+STEP_ORDER = ("impact", "sensitivity", "blast", INPUTS_STEP)
+
 
 def impact_column(server_key: str, tool: str) -> str:
     return COLUMN_SEPARATOR.join(("impact", server_key, tool))
@@ -55,12 +62,40 @@ def blast_column(server_key: str, asset: str, tool: str) -> str:
     return COLUMN_SEPARATOR.join(("blast", server_key, asset, tool))
 
 
+def input_column(server_key: str, tool: str, input_name: str) -> str:
+    return COLUMN_SEPARATOR.join(("input", server_key, tool, input_name))
+
+
+def server_steps(server: Server) -> list[str]:
+    """The rating steps this server's section has: the inputs step only if it lists inputs."""
+    return [step for step in STEP_ORDER if step != INPUTS_STEP or server.inputs]
+
+
+def page_id(kind: str, server_key: str | None = None) -> str:
+    """A stable name for one wizard page: `intro`, `feedback` or `<server>__<step>`."""
+    return kind if server_key is None else COLUMN_SEPARATOR.join((server_key, kind))
+
+
+def seconds_column(page: str) -> str:
+    return COLUMN_SEPARATOR.join(("seconds", page))
+
+
 def server_columns(server: Server) -> list[str]:
     """Every rating column contributed by one server section, in question order."""
     columns = [impact_column(server.key, tool.name) for tool in server.tools]
     columns += [sensitivity_column(server.key, asset.name) for asset in server.assets]
     columns += [blast_column(server.key, asset, tool) for asset, tool in server.blast_cells]
+    columns += [input_column(server.key, item.tool, item.input) for item in server.inputs]
     return columns
+
+
+def timing_columns(config: SurveyConfig) -> list[str]:
+    """Seconds spent on each page, in page order. Pages a participant never saw are blank."""
+    pages = [page_id("intro")]
+    for server in config.enabled_servers:
+        pages += [page_id(step, server.key) for step in server_steps(server)]
+    pages.append(page_id("feedback"))
+    return [seconds_column(page) for page in pages]
 
 
 def csv_columns(config: SurveyConfig) -> list[str]:
@@ -68,6 +103,7 @@ def csv_columns(config: SurveyConfig) -> list[str]:
     columns = list(METADATA_COLUMNS)
     for server in config.enabled_servers:
         columns += server_columns(server)
+    columns += timing_columns(config)
     columns += list(FEEDBACK_COLUMNS)
     return columns
 
@@ -79,6 +115,11 @@ def _rating(value: Any) -> Any:
     if value == UNSURE:
         return UNSURE
     return int(value)
+
+
+def _choice(value: Any) -> str:
+    """An inputs-step answer as stored, or empty string when unanswered."""
+    return str(value) if value in INPUT_VALUES else ""
 
 
 def response_to_row(
@@ -104,6 +145,7 @@ def response_to_row(
     impact = answers.get("impact", {})
     sensitivity = answers.get("sensitivity", {})
     blast = answers.get("blast", {})
+    inputs = answers.get(INPUTS_STEP, {})
     assigned = set(parse_assigned(answers.get("assigned_servers")))
 
     for server in config.enabled_servers:
@@ -128,7 +170,15 @@ def response_to_row(
             row[blast_column(server.key, asset, tool)] = _rating(
                 blast.get(server.key, {}).get((asset, tool))
             )
+        for item in server.inputs:
+            row[input_column(server.key, item.tool, item.input)] = _choice(
+                inputs.get(server.key, {}).get((item.tool, item.input))
+            )
 
+    seconds = answers.get("page_seconds", {})
+    for column in timing_columns(config):
+        page = column.split(COLUMN_SEPARATOR, 1)[1]
+        row[column] = int(seconds[page]) if page in seconds else ""
     row["ambiguity_notes"] = (answers.get("ambiguity_notes") or "").strip()
     row["comments"] = (answers.get("comments") or "").strip()
     row["confidence"] = _rating(answers.get("confidence"))
@@ -186,6 +236,18 @@ def long_format_rows(
                         "value": row.get(blast_column(server.key, asset, tool), ""),
                     }
                 )
+            # The inputs step: `asset` holds the input's name, `tool` its tool.
+            for item in server.inputs:
+                records.append(
+                    {
+                        **base,
+                        "dimension": INPUTS_STEP,
+                        "server": server.key,
+                        "asset": item.input,
+                        "tool": item.tool,
+                        "value": row.get(input_column(server.key, item.tool, item.input), ""),
+                    }
+                )
     return records
 
 
@@ -228,6 +290,14 @@ def missing_required(
         ]
         if unrated_assets:
             problems.append(f"{sensitivity_label}: " + ", ".join(unrated_assets))
+
+    if dimension in (None, INPUTS_STEP):
+        chosen = answers.get(INPUTS_STEP, {}).get(server.key, {})
+        unanswered = [f"{item.tool}.{item.input}" for item in server.inputs
+                      if chosen.get((item.tool, item.input)) in (None, "")]
+        if unanswered:
+            label = labels.get(INPUTS_STEP, "Inputs That Change the Risk")
+            problems.append(f"{label}: " + ", ".join(unanswered))
 
     if dimension not in (None, "blast"):
         return problems

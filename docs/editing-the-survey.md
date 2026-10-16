@@ -56,6 +56,14 @@ distraction; Asset Sensitivity asks what the data is worth to this organisation;
 Blast Radius is the reach of a tool over an asset and needs both.
 * `tools` drives Step 1, `assets` drives Step 2, and `blast` drives the Step 3 matrix
   (`blast.tools` are the rows, `blast.assets` the columns).
+* `inputs` (optional) drives Step 4, Inputs That Change the Risk. Each entry is
+  `{"tool", "tool_desc", "input", "desc", "examples": [two values]}`; entries of the same
+  tool are shown on one card. A server without `inputs` skips the step. The step needs
+  `step_prompts.inputs` and `input_choices` (`{"changes": "...", "no_change": "..."}`,
+  the two answer labels; "Not sure" is always added). Never put the scanner's own
+  answer in an entry: the config is participant-facing.
+* `show_timer` (top level, default `true`) shows the time so far on every page. The
+  seconds per page are recorded either way.
 * `blast.live` lists the pairs the tool actually acts on, taken from the scanner's own
   `blast_radius` map (a non-null entry means live). Every other cell renders read-only
   as N/A. A tool with no live pair should be left out of `blast.tools` entirely.

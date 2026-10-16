@@ -15,8 +15,12 @@ an account.
   Airways, GitHub at Helios Grid, Slack at Vireo Bio, and a file share and SQL
   database at CBG —
   each with three scoring steps: **Tool Impact**, **Asset Sensitivity** and **Blast
-  Radius**. Each participant is assigned **2 of the 5**, balanced so coverage stays
+  Radius**, then a short fourth step, **Inputs That Change the Risk**: for five inputs
+  of a few tools, does the input's value change the risk of a call significantly?
+  Each participant is assigned **2 of the 5**, balanced so coverage stays
   even across the study — set `servers_per_participant` in `survey_config.json`.
+* Shows the time so far at the top of each page, and records the seconds spent on
+  each page with the response (`show_timer` in the config turns the display off).
 * Stores every **completed** submission in Supabase (Postgres) — one row per
   participant plus one row per individual rating — and exports both wide and
   long-format CSV. Abandoned sessions are not stored.
@@ -69,9 +73,12 @@ Column naming in the wide CSV:
 impact__<server>__<tool>            e.g. impact__calendar__get-event
 sens__<server>__<asset>             e.g. sens__calendar__executive
 blast__<server>__<asset>__<tool>    e.g. blast__calendar__executive__get-event
+input__<server>__<tool>__<input>    e.g. input__calendar__create-event__timeZone
+seconds__<page>                     e.g. seconds__calendar__inputs, seconds__intro
 ```
 
-Every rating a participant makes is `1`–`5`. The Blast Radius matrix is pre-restricted
+Every rating a participant makes is `1`–`5`; an inputs answer is `changes`, `no_change`
+or `unsure`. The Blast Radius matrix is pre-restricted
 to the tool × asset pairs the scanner says exist: dead pairs render read-only as `N/A`,
 and a tool that acts on no asset is dropped from the matrix. Participants score every
 live cell before moving on.

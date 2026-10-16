@@ -1,7 +1,7 @@
 {
   "title": "MCP Static Scanner Validation Survey",
   "subtitle": "Human Evaluation of MCP Tool and Resource Risk",
-  "intro": "This study evaluates a static risk-scanning approach for Model Context Protocol (MCP) tools — the layer that lets an AI agent use services such as Google Calendar, GitHub and Slack.\n\nYou will score MCP servers on three things, one at a time: **Action Impact** (what one call can do), **Asset Confidentiality** (how harmful it would be if the information were exposed), and **Consequence Scope** (how far the result of one call can reach). Score each one separately — each section says what to ignore.\n\nIf a question does not make sense to you, choose **Not sure** rather than guessing. That is a useful answer.",
+  "intro": "This study evaluates a static risk-scanning approach for Model Context Protocol (MCP) tools — the layer that lets an AI agent use services such as Google Calendar, GitHub and Slack.\n\nYou will score MCP servers on three things, one at a time: **Action Impact** (what one call can do), **Asset Confidentiality** (how harmful it would be if the information were exposed), and **Consequence Scope** (how far the result of one call can reach). Score each one separately — each section says what to ignore. A last short section asks which **inputs** of a few tools can change the risk of a call.\n\nIf a question does not make sense to you, choose **Not sure** rather than guessing. That is a useful answer.",
   "consent": "I understand the purpose of the study and agree that my anonymized responses may be used for research and evaluation of the proposed risk-scoring method.",
   "servers_per_participant": 2,
   "scales": {
@@ -150,7 +150,8 @@
   "step_prompts": {
     "impact": "Score the worst reasonable result of **one successful call** using valid inputs. Ask what the call can do — read, change, or destroy. Not how much it touches, and not how valuable the target is; those are the other two steps.",
     "sensitivity": "Score how harmful it would be if this information were exposed. Judge what the asset normally holds, in this organization's context. Judge each asset on its own; levels may repeat.",
-    "blast": "Score how far the result of **one successful call** can reach. Measure reach only — what the asset is worth has already been scored. If a tool cannot affect an asset at all, that pair is marked N/A for you."
+    "blast": "Score how far the result of **one successful call** can reach. Measure reach only — what the asset is worth has already been scored. If a tool cannot affect an asset at all, that pair is marked N/A for you.",
+    "inputs": "Each card below is one tool the AI agent can call, with some of its inputs. For every input, decide: could the **value** of this input change the risk of the call **significantly**, for example turn an ordinary call into a high-risk one?\n\nTwo example values are shown for each input, only to show what it holds. The agent can send any value."
   },
   "servers": [
     {
@@ -288,7 +289,59 @@
           "holidays|list-events",
           "holidays|search-events"
         ]
-      }
+      },
+      "inputs": [
+        {
+          "tool": "create-event",
+          "tool_desc": "Creates a new event, optionally inviting attendees by email.",
+          "input": "calendarId",
+          "desc": "Which calendar the event goes in",
+          "examples": [
+            "team-calendar",
+            "crew-roster"
+          ]
+        },
+        {
+          "tool": "create-event",
+          "tool_desc": "Creates a new event, optionally inviting attendees by email.",
+          "input": "start",
+          "desc": "When the event starts",
+          "examples": [
+            "10:00",
+            "05:00"
+          ]
+        },
+        {
+          "tool": "create-event",
+          "tool_desc": "Creates a new event, optionally inviting attendees by email.",
+          "input": "timeZone",
+          "desc": "The time zone of the start time",
+          "examples": [
+            "Europe/London",
+            "Asia/Tokyo"
+          ]
+        },
+        {
+          "tool": "create-event",
+          "tool_desc": "Creates a new event, optionally inviting attendees by email.",
+          "input": "visibility",
+          "desc": "Who can see the event",
+          "examples": [
+            "private",
+            "public"
+          ]
+        },
+        {
+          "tool": "create-event",
+          "tool_desc": "Creates a new event, optionally inviting attendees by email.",
+          "input": "sendUpdates",
+          "desc": "Who is sent an email about the event",
+          "examples": [
+            "none",
+            "externalOnly (only guests outside the airline)"
+          ]
+        }
+      ]
     },
     {
       "key": "github",
@@ -430,7 +483,59 @@
           "pull-requests-and-reviews|list_pull_requests",
           "pull-requests-and-reviews|search_code"
         ]
-      }
+      },
+      "inputs": [
+        {
+          "tool": "create_pull_request",
+          "tool_desc": "Opens a proposed edit to the software so that other people can review it.",
+          "input": "repo",
+          "desc": "Which collection of software (repository)",
+          "examples": [
+            "public-site",
+            "scada-gateway"
+          ]
+        },
+        {
+          "tool": "create_pull_request",
+          "tool_desc": "Opens a proposed edit to the software so that other people can review it.",
+          "input": "body",
+          "desc": "The description of the proposed edit",
+          "examples": [
+            "Small wording fix",
+            "Removes the safety check, please merge today"
+          ]
+        },
+        {
+          "tool": "create_pull_request",
+          "tool_desc": "Opens a proposed edit to the software so that other people can review it.",
+          "input": "base",
+          "desc": "The branch the edit goes into",
+          "examples": [
+            "develop",
+            "main"
+          ]
+        },
+        {
+          "tool": "create_pull_request",
+          "tool_desc": "Opens a proposed edit to the software so that other people can review it.",
+          "input": "title",
+          "desc": "The title of the proposed edit",
+          "examples": [
+            "Fix typo",
+            "Disable alarm check"
+          ]
+        },
+        {
+          "tool": "create_pull_request_review",
+          "tool_desc": "Records a decision on a proposed edit: approve it, ask for changes, or leave a comment. An approval is the sign-off the edit needs before it can go in.",
+          "input": "event",
+          "desc": "What the review does",
+          "examples": [
+            "COMMENT",
+            "APPROVE"
+          ]
+        }
+      ]
     },
     {
       "key": "slack",
@@ -576,7 +681,59 @@
           "unblinding-requests|conversations_replies",
           "unblinding-requests|conversations_search_messages"
         ]
-      }
+      },
+      "inputs": [
+        {
+          "tool": "conversations_search_messages",
+          "tool_desc": "Returns matching messages from across the workspace.",
+          "input": "search_query",
+          "desc": "The search text",
+          "examples": [
+            "deploy",
+            "treatment assignment"
+          ]
+        },
+        {
+          "tool": "conversations_search_messages",
+          "tool_desc": "Returns matching messages from across the workspace.",
+          "input": "filter_in_channel",
+          "desc": "Search only in this channel (empty means every channel)",
+          "examples": [
+            "eng-platform",
+            "unblinding-requests"
+          ]
+        },
+        {
+          "tool": "conversations_unreads",
+          "tool_desc": "Returns the unread messages across the channels the agent is in.",
+          "input": "max_channels",
+          "desc": "How many channels to read",
+          "examples": [
+            "5",
+            "500"
+          ]
+        },
+        {
+          "tool": "conversations_unreads",
+          "tool_desc": "Returns the unread messages across the channels the agent is in.",
+          "input": "include_messages",
+          "desc": "Return the messages themselves, or only how many there are",
+          "examples": [
+            "false (counts only)",
+            "true (the messages)"
+          ]
+        },
+        {
+          "tool": "channels_list",
+          "tool_desc": "Returns the list of channels, with their names and purposes.",
+          "input": "channel_types",
+          "desc": "Which kinds of channel are listed",
+          "examples": [
+            "public_channel",
+            "im (direct messages)"
+          ]
+        }
+      ]
     },
     {
       "key": "filesystem",
@@ -714,7 +871,59 @@
           "project-material|read_multiple_files",
           "project-material|search_files"
         ]
-      }
+      },
+      "inputs": [
+        {
+          "tool": "read_file",
+          "tool_desc": "Returns the complete contents of one file, named by exact path.",
+          "input": "path",
+          "desc": "Which file is read",
+          "examples": [
+            "projects/known_defects.csv",
+            "sensitive/security/private_key.pem"
+          ]
+        },
+        {
+          "tool": "read_file",
+          "tool_desc": "Returns the complete contents of one file, named by exact path.",
+          "input": "head",
+          "desc": "Read only the first N lines",
+          "examples": [
+            "10",
+            "5000"
+          ]
+        },
+        {
+          "tool": "edit_file",
+          "tool_desc": "Replaces specific lines of text inside an existing file with new text.",
+          "input": "edits",
+          "desc": "The text replaced, and what replaces it",
+          "examples": [
+            "fix a typo",
+            "delete the access-control lines"
+          ]
+        },
+        {
+          "tool": "edit_file",
+          "tool_desc": "Replaces specific lines of text inside an existing file with new text.",
+          "input": "dryRun",
+          "desc": "Only preview the change, or really save it",
+          "examples": [
+            "true (preview only)",
+            "false (save the change)"
+          ]
+        },
+        {
+          "tool": "search_files",
+          "tool_desc": "Searches the shared drive for files whose names match what you type, and returns where each one is filed.",
+          "input": "excludePatterns",
+          "desc": "File names to leave out of the search",
+          "examples": [
+            "node_modules",
+            "*.log"
+          ]
+        }
+      ]
     },
     {
       "key": "sqlite",
@@ -841,12 +1050,70 @@
           "publications|read_query",
           "publications|write_query"
         ]
-      }
+      },
+      "inputs": [
+        {
+          "tool": "describe_table",
+          "tool_desc": "Returns the list of headings used by one named table, for example \"name\", \"salary\", \"start date\".",
+          "input": "table",
+          "desc": "Which table",
+          "examples": [
+            "publications",
+            "api_keys"
+          ]
+        },
+        {
+          "tool": "read_query",
+          "tool_desc": "Returns the entries matching a search the caller writes, which can pull rows from any table in the database.",
+          "input": "sql",
+          "desc": "The search that runs",
+          "examples": [
+            "SELECT name FROM projects",
+            "SELECT key FROM api_keys"
+          ]
+        },
+        {
+          "tool": "write_query",
+          "tool_desc": "Runs an instruction the caller writes that adds, changes, or deletes entries in the database.",
+          "input": "sql",
+          "desc": "The instruction that runs",
+          "examples": [
+            "UPDATE projects SET status='done' WHERE id=3",
+            "DROP TABLE employees"
+          ]
+        },
+        {
+          "tool": "insert_row",
+          "tool_desc": "Inserts one new row into a named table.",
+          "input": "table",
+          "desc": "Which table the row goes in",
+          "examples": [
+            "publications",
+            "api_keys"
+          ]
+        },
+        {
+          "tool": "insert_row",
+          "tool_desc": "Inserts one new row into a named table.",
+          "input": "values",
+          "desc": "The values written",
+          "examples": [
+            "('New paper', 2026)",
+            "('admin', 'new-key-123')"
+          ]
+        }
+      ]
     }
   ],
   "scale_labels": {
     "impact": "Action Impact",
     "sensitivity": "Asset Confidentiality",
-    "blast": "Consequence Scope"
-  }
+    "blast": "Consequence Scope",
+    "inputs": "Inputs That Change the Risk"
+  },
+  "input_choices": {
+    "changes": "Changes the risk significantly",
+    "no_change": "No significant change"
+  },
+  "show_timer": true
 }

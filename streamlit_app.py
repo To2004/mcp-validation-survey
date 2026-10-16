@@ -24,11 +24,15 @@ import streamlit as st
 from survey.assignment import choose_servers, format_assigned, parse_assigned
 from survey.config import ConfigError, Server, SurveyConfig, lint, load_config
 from survey.schema import (
+    INPUT_CHANGES,
+    INPUT_NO_CHANGE,
     UNSURE,
     csv_columns,
     long_format_rows,
     missing_required,
+    page_id,
     response_to_row,
+    server_steps,
 )
 from survey.storage import StorageError, build_storage, to_csv_bytes
 
@@ -36,14 +40,19 @@ APP_ROOT = Path(__file__).resolve().parent
 CONFIG_PATH = APP_ROOT / "survey_config.json"
 DEFAULT_CSV_PATH = APP_ROOT / "data" / "responses.csv"
 
-STEPS = ("impact", "sensitivity", "blast")
+STEPS = ("impact", "sensitivity", "blast", "inputs")
 # Display names come from the config so they can be changed without touching code.
 FALLBACK_LABELS = {
     "impact": "Action Impact",
     "sensitivity": "Asset Confidentiality",
     "blast": "Consequence Scope",
+    "inputs": "Inputs That Change the Risk",
 }
-STEP_NUMBER = {"impact": 1, "sensitivity": 2, "blast": 3}
+STEP_NUMBER = {"impact": 1, "sensitivity": 2, "blast": 3, "inputs": 4}
+#: How often the "time so far" line refreshes while a page is open.
+TIMER_REFRESH_SECONDS = 30
+#: Column widths of the inputs step: the input, its two answers, then Not sure.
+INPUT_GRID = [3.2, 1.7, 1.7, 1.2]
 
 
 def scale_label(config: SurveyConfig, dimension: str) -> str:
@@ -266,6 +275,9 @@ def init_state() -> None:
     st.session_state.setdefault("submitted", False)
     st.session_state.setdefault("problems", [])
     st.session_state.setdefault("assigned", [])
+    # Seconds spent on each page, so a rushed or stalled section shows in the data.
+    st.session_state.setdefault("page_seconds", {})
+    st.session_state.setdefault("page_entered_at", time.time())
 
 
 # ------------------------------------------------------------- state <-> answers
@@ -281,6 +293,10 @@ def sensitivity_key(server: Server, asset: str) -> str:
 
 def blast_key(server: Server, asset: str, tool: str) -> str:
     return f"blast__{server.key}__{asset}__{tool}"
+
+
+def inputs_key(server: Server, tool: str, input_name: str) -> str:
+    return f"inputs__{server.key}__{tool}__{input_name}"
 
 
 def answer_widget_keys(config: SurveyConfig) -> list[str]:
@@ -299,6 +315,7 @@ def answer_widget_keys(config: SurveyConfig) -> list[str]:
         keys += [impact_key(server, tool.name) for tool in server.tools]
         keys += [sensitivity_key(server, asset.name) for asset in server.assets]
         keys += [blast_key(server, asset, tool) for asset, tool in server.live_blast_cells]
+        keys += [inputs_key(server, item.tool, item.input) for item in server.inputs]
     return keys
 
 
@@ -331,6 +348,8 @@ def collect_answers(config: SurveyConfig) -> dict:
         "impact": {},
         "sensitivity": {},
         "blast": {},
+        "inputs": {},
+        "page_seconds": dict(state.get("page_seconds", {})),
     }
     for server in assigned_servers(config):
         answers["impact"][server.key] = {
@@ -342,6 +361,10 @@ def collect_answers(config: SurveyConfig) -> dict:
         answers["blast"][server.key] = {
             (asset, tool): state.get(blast_key(server, asset, tool))
             for asset, tool in server.live_blast_cells
+        }
+        answers["inputs"][server.key] = {
+            (item.tool, item.input): state.get(inputs_key(server, item.tool, item.input))
+            for item in server.inputs
         }
     return answers
 
@@ -377,10 +400,10 @@ def assign_servers(config: SurveyConfig) -> None:
 
 
 def pages(config: SurveyConfig) -> list[tuple[str, Server | None]]:
-    """Ordered wizard pages: intro, then three steps per assigned server, then feedback."""
+    """Ordered wizard pages: intro, then each assigned server's steps, then feedback."""
     plan: list[tuple[str, Server | None]] = [("intro", None)]
     for server in assigned_servers(config):
-        plan += [(step, server) for step in STEPS]
+        plan += [(step, server) for step in server_steps(server)]
     plan.append(("feedback", None))
     return plan
 
@@ -410,7 +433,22 @@ def validate(config: SurveyConfig, kind: str, server: Server | None) -> list[str
     return missing_required(config, server, answers, dimension=kind)
 
 
-def go_back() -> None:
+def record_page_time(config: SurveyConfig) -> None:
+    """Add the time since the current page was entered to that page's total.
+
+    Called whenever the participant leaves a page or presses Next, so a page visited
+    twice (Back, then Next) accumulates both visits."""
+    plan = pages(config)
+    kind, server = plan[min(st.session_state.page, len(plan) - 1)]
+    page = page_id(kind, server.key if server else None)
+    now = time.time()
+    spent = now - st.session_state.get("page_entered_at", now)
+    st.session_state.page_seconds[page] = st.session_state.page_seconds.get(page, 0) + spent
+    st.session_state.page_entered_at = now
+
+
+def go_back(config: SurveyConfig) -> None:
+    record_page_time(config)
     st.session_state.problems = []
     st.session_state.page = max(0, st.session_state.page - 1)
 
@@ -418,6 +456,7 @@ def go_back() -> None:
 def go_next(config: SurveyConfig) -> None:
     """Advance, or record what is missing. Runs as a button callback, before the rerun,
     so it sees the widget values the participant just changed."""
+    record_page_time(config)
     plan = pages(config)
     kind, server = plan[st.session_state.page]
     problems = validate(config, kind, server)
@@ -539,6 +578,11 @@ HOWTO = {
         "shown as <b>N/A</b> are pairs the tool does not act on — they are fixed and "
         "need no answer."
     ),
+    "inputs": (
+        "<b>How to answer:</b> each card is one tool, each row one of its inputs. Choose "
+        "one answer per row. The two example values only show what the input holds; the "
+        "agent can send any value. If you cannot judge one, click <b>Not sure</b>."
+    ),
 }
 
 
@@ -625,6 +669,38 @@ def blast_option_label(config: SurveyConfig, value: str) -> str:
             short = BLAST_SHORT_LABELS.get(level.value, level.label)
             return f"{level.value} · {short}"
     return str(value)
+
+
+def input_cards(config: SurveyConfig, server: Server) -> None:
+    """One card per tool, a row per input, three answers per row."""
+    labels = config.input_choices or {}
+    choices = [(INPUT_CHANGES, labels.get(INPUT_CHANGES, INPUT_CHANGES)),
+               (INPUT_NO_CHANGE, labels.get(INPUT_NO_CHANGE, INPUT_NO_CHANGE)),
+               (UNSURE, "Not sure")]
+    for tool, tool_desc in server.input_tools:
+        with st.container(border=True):
+            st.markdown(f'<div class="question-title"><b>{tool}</b> — {tool_desc}</div>',
+                        unsafe_allow_html=True)
+            header = st.columns(INPUT_GRID)
+            header[0].markdown('<div class="grid-head">Input</div>', unsafe_allow_html=True)
+            for column, (_, label) in zip(header[1:], choices):
+                column.markdown(f'<div class="scale-num"><small>{label}</small></div>',
+                                unsafe_allow_html=True)
+            for item in (i for i in server.inputs if i.tool == tool):
+                row = st.columns(INPUT_GRID)
+                examples = ", ".join(f"<code>{example}</code>" for example in item.examples)
+                with row[0]:
+                    st.markdown(f'<div class="row-name">{item.input}</div>'
+                                f'<div class="question-help">{item.desc}<br>e.g. {examples}</div>',
+                                unsafe_allow_html=True)
+                key = inputs_key(server, item.tool, item.input)
+                current = st.session_state.get(key)
+                for column, (value, label) in zip(row[1:], choices):
+                    with column:
+                        st.button(label, key=f"{key}__opt{value}",
+                                  type="primary" if current == value else "secondary",
+                                  on_click=set_rating, args=(key, value),
+                                  use_container_width=True)
 
 
 def blast_matrix(config: SurveyConfig, server: Server) -> None:
@@ -721,6 +797,7 @@ STEP_CONTEXT = {
     "impact": ("mcp",),
     "sensitivity": ("org",),
     "blast": ("mcp", "org"),
+    "inputs": ("mcp", "org"),
 }
 CONTEXT_LABELS = {"mcp": "About this MCP server", "org": "About this organization"}
 
@@ -744,6 +821,11 @@ def render_step(config: SurveyConfig, server: Server, step: str) -> None:
 
     st.markdown(f"#### {step_title(config, step)}")
     st.write(config.step_prompts[step])
+    if step == "inputs":
+        # No 1-5 scale here: the answer is whether an input matters at all.
+        how_to_answer(step)
+        input_cards(config, server)
+        return
     scale_reference(config, step)
 
     how_to_answer(step)
@@ -776,6 +858,13 @@ def render_feedback(config: SurveyConfig) -> None:
 
 
 # ------------------------------------------------------------------------- submit
+
+
+@st.fragment(run_every=TIMER_REFRESH_SECONDS)
+def elapsed_timer() -> None:
+    """Time since the participant opened the survey, refreshed every half minute."""
+    minutes = int((time.time() - st.session_state.started_at) // 60)
+    st.caption(f"Time so far: {minutes} min")
 
 
 def submit(config: SurveyConfig) -> None:
@@ -908,8 +997,11 @@ def main() -> None:
         total = len(plan)
     else:
         per = min(config.servers_per_participant, len(config.enabled_servers))
-        total = 2 + len(STEPS) * per
+        steps = max(len(server_steps(server)) for server in config.enabled_servers)
+        total = 2 + steps * per
     st.progress((index + 1) / total, text=f"Section {index + 1} of {total}")
+    if config.show_timer:
+        elapsed_timer()
 
     if kind == "intro":
         render_intro(config)
@@ -928,6 +1020,7 @@ def main() -> None:
         st.button(
             "← Back",
             on_click=go_back,
+            args=(config,),
             disabled=index == 0,
             use_container_width=True,
             key="nav_back",

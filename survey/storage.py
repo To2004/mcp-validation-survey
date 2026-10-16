@@ -30,7 +30,7 @@ from pathlib import Path
 from typing import Any, Callable, Iterable, Protocol, Sequence
 
 
-RATING_PREFIXES = {"impact": "impact", "sens": "sensitivity", "blast": "blast"}
+RATING_PREFIXES = {"impact": "impact", "sens": "sensitivity", "blast": "blast", "input": "inputs"}
 
 
 def parse_rating_column(name: str) -> tuple[str, str, str, str] | None:
@@ -49,6 +49,9 @@ def parse_rating_column(name: str) -> tuple[str, str, str, str] | None:
         return ("sensitivity", parts[1], parts[2], "")
     if kind == "blast" and len(parts) == 4:
         return ("blast", parts[1], parts[2], parts[3])
+    if kind == "inputs" and len(parts) == 4:
+        # input__<server>__<tool>__<input>: the input's name goes in `asset`
+        return ("inputs", parts[1], parts[3], parts[2])
     return None
 
 

@@ -117,6 +117,7 @@ class TestUnsureIsAvailableEverywhereItIsPromised:
             "impact": {server.key: {t.name: 3 for t in server.tools}},
             "sensitivity": {server.key: {a.name: 3 for a in server.assets}},
             "blast": {server.key: {cell: "unsure" for cell in server.live_blast_cells}},
+            "inputs": {server.key: {(i.tool, i.input): "unsure" for i in server.inputs}},
         }
         assert missing_required(CONFIG, server, answers) == []
 
