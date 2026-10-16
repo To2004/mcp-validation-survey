@@ -33,7 +33,7 @@ Rating columns are named by dimension, server and target:
 impact__<server>__<tool>            impact__calendar__get-event
 sens__<server>__<asset>             sens__calendar__exec-calendar
 blast__<server>__<asset>__<tool>    blast__calendar__executive__get-event
-input__<server>__<tool>__<input>    input__calendar__create-event__timeZone
+input__<server>__<tool>__<input>    input__calendar__list-events__timeZone
 ```
 
 After the rating columns, one column per page holds the seconds spent on it, summed

@@ -15,8 +15,9 @@ an account.
   Airways, GitHub at Helios Grid, Slack at Vireo Bio, and a file share and SQL
   database at CBG —
   each with three scoring steps: **Tool Impact**, **Asset Sensitivity** and **Blast
-  Radius**, then a short fourth step, **Inputs That Change the Risk**: for five inputs
-  of a few tools, does the input's value change the risk of a call significantly?
+  Radius**, then a short fourth step, **Inputs That Change the Risk**: for eight inputs
+  spread over several tools (all five for the SQL database), does the input's value
+  change the risk of a call significantly?
   Each participant is assigned **2 of the 5**, balanced so coverage stays
   even across the study — set `servers_per_participant` in `survey_config.json`.
 * Shows a clock of the time so far at the top of each page (`show_timer` in the config
@@ -75,7 +76,7 @@ Column naming in the wide CSV:
 impact__<server>__<tool>            e.g. impact__calendar__get-event
 sens__<server>__<asset>             e.g. sens__calendar__executive
 blast__<server>__<asset>__<tool>    e.g. blast__calendar__executive__get-event
-input__<server>__<tool>__<input>    e.g. input__calendar__create-event__timeZone
+input__<server>__<tool>__<input>    e.g. input__calendar__list-events__timeZone
 seconds__<page>                     e.g. seconds__calendar__inputs, seconds__intro
                                     (also rows of the ratings table, dimension seconds)
 ```

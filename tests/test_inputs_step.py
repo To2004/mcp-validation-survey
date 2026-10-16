@@ -31,10 +31,17 @@ def with_inputs(rows, **extra) -> dict:
 
 
 class TestConfig:
-    def test_every_server_asks_about_five_inputs_with_two_examples(self):
+    def test_every_server_asks_about_eight_inputs_spread_over_its_tools(self):
+        # Eight where the server has them; the SQL database has only five inputs.
         for server in CONFIG.enabled_servers:
-            assert len(server.inputs) == 5, server.key
+            assert len(server.inputs) == (5 if server.key == "sqlite" else 8), server.key
             assert all(len(item.examples) == 2 for item in server.inputs)
+            per_tool = [sum(i.tool == tool for i in server.inputs) for tool, _ in server.input_tools]
+            assert len(per_tool) >= 3 and max(per_tool) <= 3, server.key
+
+    def test_the_step_explains_that_an_id_is_only_a_number_or_code(self):
+        assert "ids" in CONFIG.step_prompts["inputs"]
+        assert "do not know what it points to" in CONFIG.step_prompts["inputs"]
 
     def test_inputs_parse_and_group_by_tool(self):
         config = load_config_from_dict(with_inputs([ROW, {**ROW, "input": "timeZone"}]))
@@ -63,7 +70,7 @@ class TestConfig:
 class TestColumns:
     def test_each_input_has_a_column_and_each_page_a_time(self):
         columns = csv_columns(CONFIG)
-        assert "input__calendar__create-event__timeZone" in columns
+        assert "input__calendar__list-events__timeZone" in columns
         assert "seconds__intro" in columns and "seconds__calendar__inputs" in columns
         assert columns.index("seconds__feedback") < columns.index("ambiguity_notes")
 

@@ -151,7 +151,7 @@
     "impact": "Score the worst reasonable result of **one successful call** using valid inputs. Ask what the call can do — read, change, or destroy. Not how much it touches, and not how valuable the target is; those are the other two steps.",
     "sensitivity": "Score how harmful it would be if this information were exposed. Judge what the asset normally holds, in this organization's context. Judge each asset on its own; levels may repeat.",
     "blast": "Score how far the result of **one successful call** can reach. Measure reach only — what the asset is worth has already been scored. If a tool cannot affect an asset at all, that pair is marked N/A for you.",
-    "inputs": "Each card below is one tool the AI agent can call, with some of its inputs. For every input, decide: could the **value** of this input change the risk of the call **significantly**, for example turn an ordinary call into a high-risk one?\n\nTwo example values are shown for each input, only to show what it holds. The agent can send any value."
+    "inputs": "Each card below is one tool the AI agent can call, with some of its inputs. For every input, decide: could the **value** of this input change the risk of the call **significantly**, for example turn an ordinary call into a high-risk one?\n\nTwo example values are shown for each input, only to show what it holds. The agent can send any value.\n\nSome inputs are **ids**. For an id you see only a number or a code, such as `600` or `U01ABCDEF`; you do not know what it points to."
   },
   "servers": [
     {
@@ -264,31 +264,11 @@
         {
           "tool": "create-event",
           "tool_desc": "Creates a new event, optionally inviting attendees by email.",
-          "input": "calendarId",
-          "desc": "Which calendar the event goes in",
-          "examples": [
-            "team-calendar",
-            "crew-roster"
-          ]
-        },
-        {
-          "tool": "create-event",
-          "tool_desc": "Creates a new event, optionally inviting attendees by email.",
           "input": "start",
           "desc": "When the event starts",
           "examples": [
             "10:00",
             "05:00"
-          ]
-        },
-        {
-          "tool": "create-event",
-          "tool_desc": "Creates a new event, optionally inviting attendees by email.",
-          "input": "timeZone",
-          "desc": "The time zone of the start time",
-          "examples": [
-            "Europe/London",
-            "Asia/Tokyo"
           ]
         },
         {
@@ -309,6 +289,56 @@
           "examples": [
             "none",
             "externalOnly (only guests outside the airline)"
+          ]
+        },
+        {
+          "tool": "list-events",
+          "tool_desc": "Returns the events on the calendars named, with their titles and times.",
+          "input": "calendarId",
+          "desc": "Which calendar is read",
+          "examples": [
+            "team-calendar",
+            "exec-calendar"
+          ]
+        },
+        {
+          "tool": "list-events",
+          "tool_desc": "Returns the events on the calendars named, with their titles and times.",
+          "input": "timeMin",
+          "desc": "Start of the period read",
+          "examples": [
+            "2026-06-01",
+            "2025-01-01"
+          ]
+        },
+        {
+          "tool": "list-events",
+          "tool_desc": "Returns the events on the calendars named, with their titles and times.",
+          "input": "timeZone",
+          "desc": "The time zone the times are shown in",
+          "examples": [
+            "Europe/London",
+            "Asia/Tokyo"
+          ]
+        },
+        {
+          "tool": "search-events",
+          "tool_desc": "Returns every event matching a search word, taken from all the calendars the agent can see, with titles and attendees.",
+          "input": "query",
+          "desc": "The search text",
+          "examples": [
+            "standup",
+            "board meeting"
+          ]
+        },
+        {
+          "tool": "get-event",
+          "tool_desc": "Returns one event in full: title, description, location and the attendee list.",
+          "input": "eventId",
+          "desc": "Which event is read (its id)",
+          "examples": [
+            "bv69vaeagiume78fgl3k720cvs",
+            "e16m3eed2r4a0dqkrupj1gk65c"
           ]
         }
       ]
@@ -433,31 +463,11 @@
         {
           "tool": "create_pull_request",
           "tool_desc": "Opens a proposed edit to the software so that other people can review it.",
-          "input": "body",
-          "desc": "The description of the proposed edit",
-          "examples": [
-            "Small wording fix",
-            "Removes the safety check, please merge today"
-          ]
-        },
-        {
-          "tool": "create_pull_request",
-          "tool_desc": "Opens a proposed edit to the software so that other people can review it.",
           "input": "base",
           "desc": "The branch the edit goes into",
           "examples": [
             "develop",
             "main"
-          ]
-        },
-        {
-          "tool": "create_pull_request",
-          "tool_desc": "Opens a proposed edit to the software so that other people can review it.",
-          "input": "title",
-          "desc": "The title of the proposed edit",
-          "examples": [
-            "Fix typo",
-            "Disable alarm check"
           ]
         },
         {
@@ -468,6 +478,56 @@
           "examples": [
             "COMMENT",
             "APPROVE"
+          ]
+        },
+        {
+          "tool": "create_pull_request_review",
+          "tool_desc": "Records a decision on a proposed edit: approve it, ask for changes, or leave a comment. An approval is the sign-off the edit needs before it can go in.",
+          "input": "pull_number",
+          "desc": "Which proposed edit is reviewed (its number)",
+          "examples": [
+            "7",
+            "600"
+          ]
+        },
+        {
+          "tool": "create_or_update_file",
+          "tool_desc": "Writes one file, creating it or replacing its contents.",
+          "input": "path",
+          "desc": "Where the file is written",
+          "examples": [
+            "docs/status.md",
+            "config/.env"
+          ]
+        },
+        {
+          "tool": "create_or_update_file",
+          "tool_desc": "Writes one file, creating it or replacing its contents.",
+          "input": "content",
+          "desc": "The file's new content",
+          "examples": [
+            "Fix typo on the outage page",
+            "DB_PASSWORD=…"
+          ]
+        },
+        {
+          "tool": "list_pull_requests",
+          "tool_desc": "Returns a list of the proposed edits to one collection of software, with each one's title, author, and whether it is still open.",
+          "input": "per_page",
+          "desc": "How many proposed edits are returned per page",
+          "examples": [
+            "10",
+            "100"
+          ]
+        },
+        {
+          "tool": "create_issue",
+          "tool_desc": "Opens a new issue, a task or bug report, in one collection of software.",
+          "input": "title",
+          "desc": "The title of the new issue",
+          "examples": [
+            "Typo on the status page",
+            "Topology, patch and credential notes"
           ]
         }
       ]
@@ -600,6 +660,16 @@
           ]
         },
         {
+          "tool": "conversations_search_messages",
+          "tool_desc": "Returns matching messages from across the workspace.",
+          "input": "filter_users_from",
+          "desc": "Only messages from this person (their user id)",
+          "examples": [
+            "U01ABCDEF",
+            "U07XYZ123"
+          ]
+        },
+        {
           "tool": "conversations_unreads",
           "tool_desc": "Returns the unread messages across the channels the agent is in.",
           "input": "max_channels",
@@ -627,6 +697,26 @@
           "examples": [
             "public_channel",
             "im (direct messages)"
+          ]
+        },
+        {
+          "tool": "conversations_history",
+          "tool_desc": "Returns the recent messages in one channel.",
+          "input": "limit",
+          "desc": "How many messages are read",
+          "examples": [
+            "20",
+            "1000"
+          ]
+        },
+        {
+          "tool": "conversations_replies",
+          "tool_desc": "Returns the replies in one message thread.",
+          "input": "thread_ts",
+          "desc": "Which thread is read (its id)",
+          "examples": [
+            "1785748939.722479",
+            "1785315337.263009"
           ]
         }
       ]
@@ -759,6 +849,16 @@
           ]
         },
         {
+          "tool": "read_multiple_files",
+          "tool_desc": "Returns the complete contents of several named files in one call.",
+          "input": "paths",
+          "desc": "Which files are read, in one call",
+          "examples": [
+            "one file",
+            "twenty files"
+          ]
+        },
+        {
           "tool": "edit_file",
           "tool_desc": "Replaces specific lines of text inside an existing file with new text.",
           "input": "edits",
@@ -786,6 +886,26 @@
           "examples": [
             "node_modules",
             "*.log"
+          ]
+        },
+        {
+          "tool": "move_file",
+          "tool_desc": "Moves or renames a file or directory.",
+          "input": "destination",
+          "desc": "Where the file is moved to",
+          "examples": [
+            "projects/archive/notes.md",
+            "shared/public/private_key.pem"
+          ]
+        },
+        {
+          "tool": "list_directory_with_sizes",
+          "tool_desc": "Lists the files and folders inside one folder, with the size of each.",
+          "input": "sortBy",
+          "desc": "How the folder listing is sorted",
+          "examples": [
+            "name",
+            "size"
           ]
         }
       ]
