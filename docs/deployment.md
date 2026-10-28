@@ -109,9 +109,8 @@ check — see [supabase.md](supabase.md#pausing-and-the-health-check).
 ## Before sending the link out
 
 1. Reboot the app if anything under `survey/` changed since the last reboot.
-2. Remove the `[client] showErrorDetails = true` section from
-   `.streamlit/config.toml`. It was added for debugging and shows real tracebacks to
-   participants.
+2. Make sure `.streamlit/config.toml` has no `showErrorDetails = true`. It is useful
+   while debugging a deploy, but it shows real tracebacks to participants.
 3. Make sure `admin_token` and the Supabase secret key are current, and rotated if they
    were ever shared in plain text.
 4. Check the **Database health** workflow ran green recently (GitHub → **Actions**).

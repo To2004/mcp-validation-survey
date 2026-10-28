@@ -15,7 +15,7 @@ As of 28 October 2026:
 | Database health workflow | Active, passing every two days |
 | Keep-awake workflow | Disabled, and known not to work — see [deployment.md](deployment.md#keeping-the-app-awake) |
 | Survey content | 5 servers across 4 organisations; 2 servers per participant; 4 steps per server |
-| `showErrorDetails` | Still on in `.streamlit/config.toml`; remove before recruiting |
+| Error details | Hidden from participants (`showErrorDetails` removed 28 October 2026) |
 
 The most recent content changes (16 October 2026) added the Inputs That Change the
 Risk step, a 4 × 4 Consequence Scope matrix, and per-page times.
