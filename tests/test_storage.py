@@ -1,12 +1,15 @@
 """Tests for the storage backends and the wide-row -> table mapping."""
 
 import json
+import re
+from pathlib import Path
 
 import pytest
 
 from survey.storage import (
     GoogleSheetsStorage,
     LocalCsvStorage,
+    SUPABASE_SCHEMA_SQL,
     StorageError,
     SupabaseStorage,
     build_storage,
@@ -247,3 +250,17 @@ class TestLocalCsvStorage:
 
     def test_read_all_is_empty_before_the_first_write(self, tmp_path):
         assert LocalCsvStorage(tmp_path / "missing.csv").read_all() == []
+
+
+class TestSchemaDocumentation:
+    def test_the_documented_schema_matches_the_code(self):
+        # The SQL a maintainer pastes into Supabase comes from docs/supabase.md. A
+        # column missing there makes every insert fail at Submit, so the two copies
+        # must not drift.
+        doc = (Path(__file__).resolve().parent.parent / "docs" / "supabase.md").read_text()
+        blocks = re.findall(r"```sql\n(.*?)```", doc, flags=re.DOTALL)
+
+        def normalise(sql):
+            return " ".join(sql.split())
+
+        assert normalise(SUPABASE_SCHEMA_SQL) in [normalise(block) for block in blocks]

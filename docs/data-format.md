@@ -78,6 +78,9 @@ missing data — within an assigned server, every rating is required, so a blank
 would mean the row came from an older version of the app.
 
 The long export contains records only for assigned servers, so it needs no such care.
+The Supabase `ratings` table is different: it holds a row for every rating column,
+with `value = ''` for servers the participant was not assigned. Filter on
+`value <> ''` there (see [supabase.md](supabase.md#ratings--one-row-per-answer)).
 
 ### How servers are assigned
 
@@ -102,8 +105,10 @@ Columns: `submission_id`, `participant_id`, `dimension`, `server`, `asset`, `too
 
 `dimension` is `impact`, `sensitivity`, `blast` or `inputs`. `asset` is blank for impact
 rows; `tool` is blank for sensitivity rows. For `inputs` rows, `asset` holds the input's
-name and `tool` its tool, and `value_num` is null (the answer is not a number). This is the shape to join against the scanner's
-per-tool and per-asset output for agreement analysis.
+name and `tool` its tool; in the Supabase `ratings` table their `value_num` is null,
+since the answer is not a number. Page times are not part of the long export. This is
+the shape to join against the scanner's per-tool and per-asset output for agreement
+analysis.
 
 ## Analysis caveats
 

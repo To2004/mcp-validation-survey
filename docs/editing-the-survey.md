@@ -15,6 +15,10 @@ python -m pytest tests -q
 shape. If you intentionally changed the number of tools or assets, update
 `test_server_shapes_match_the_source_form` to match.
 
+When running locally, restart `streamlit run` (or choose **Clear cache** from the app's
+menu) to see a config edit: the loaded config is cached. On Streamlit Cloud a push to
+`main` is enough.
+
 ## Structure
 
 ```json
@@ -23,8 +27,12 @@ shape. If you intentionally changed the number of tools or assets, update
   "subtitle": "...",
   "intro": "...",
   "consent": "...",
+  "servers_per_participant": 2,
+  "show_timer": true,
   "scales": { "impact": [], "sensitivity": [], "blast": [] },
-  "step_prompts": { "impact": "...", "sensitivity": "...", "blast": "..." },
+  "scale_labels": { "impact": "Action Impact", "...": "..." },
+  "step_prompts": { "impact": "...", "sensitivity": "...", "blast": "...", "inputs": "..." },
+  "input_choices": { "changes": "...", "no_change": "..." },
   "servers": [
     {
       "key": "calendar",
@@ -38,18 +46,25 @@ shape. If you intentionally changed the number of tools or assets, update
         "tools":  ["..."],
         "assets": [{ "name": "...", "desc": "..." }],
         "live":   ["<asset>|<tool>"]
-      }
+      },
+      "inputs": [{ "tool": "...", "tool_desc": "...", "input": "...", "desc": "...",
+                   "examples": ["...", "..."] }]
     }
   ]
 }
 ```
 
+Each scale level is `{"value", "label", "meaning", "examples"}`. `scale_labels` holds
+the step names participants see; the code falls back to built-in names for any that
+are missing.
+
 * `key` is a stable id used in CSV column names.
 * `enabled: false` removes the server from the survey and from the CSV.
-* `scenario` is the **organisational** context: what this deployment means to CBG.
-  Shown on Asset Sensitivity and Blast Radius.
+* `scenario` is the **organisational** context: what this deployment means to the
+  server's organisation (Aurora Airways, Helios Grid, Vireo Bio or CBG).
+  Shown on Asset Sensitivity, Blast Radius and Inputs.
 * `mcp_context` describes the **server itself** — what it exposes, independent of any
-  organisation. Shown on Tool Impact and Blast Radius.
+  organisation. Shown on Tool Impact, Blast Radius and Inputs.
 
 The split is deliberate. Tool Impact asks what a tool does, so the organisation is a
 distraction; Asset Sensitivity asks what the data is worth to this organisation;
