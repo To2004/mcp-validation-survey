@@ -11,7 +11,7 @@ As of 28 October 2026:
 | --- | --- |
 | Participant link | <https://tem6j6jhm5dtyan6mq7mtl.streamlit.app>, built from `main` |
 | Repository | <https://github.com/To2004/mcp-validation-survey> (public) |
-| Database | Supabase project `hgruwsvuxbwzuanymgyv`, free plan |
+| Database | Supabase project `iwwcegkrxlxbjfjkymxl`, free plan, created 28 October 2026 (replaces `hgruwsvuxbwzuanymgyv`) |
 | Database health workflow | Active, passing every two days |
 | Keep-awake workflow | Disabled, and known not to work — see [deployment.md](deployment.md#keeping-the-app-awake) |
 | Survey content | 5 servers across 4 organisations; 2 servers per participant; 4 steps per server |
@@ -40,8 +40,9 @@ Rotate both at handover, so that only current maintainers hold working credentia
    still in its git history, so it must not remain valid. Generate a new one
    (`python -c "import secrets; print(secrets.token_urlsafe(32))"`) and replace it in
    **Streamlit → Settings → Secrets**. Old researcher-panel links stop working.
-2. **The Supabase secret key.** The current key has passed through a chat transcript.
-   Follow [supabase.md](supabase.md#rotating-the-secret-key), which updates the
+2. **The Supabase secret key.** Rotate it too whenever it has been shared in plain
+   text, such as in a chat. Follow
+   [supabase.md](supabase.md#rotating-the-secret-key), which updates the
    Streamlit secret and the GitHub Actions secret in an order that loses no
    submissions.
 
