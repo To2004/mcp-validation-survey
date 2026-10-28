@@ -230,7 +230,7 @@ class GoogleSheetsStorage:
 
 
 # The tables the Supabase backend writes to. Run this once in the Supabase SQL
-# editor - the client library cannot issue DDL. Repeated in docs/deployment.md.
+# editor - the client library cannot issue DDL. Repeated in docs/supabase.md.
 SUPABASE_SCHEMA_SQL = """
 create table if not exists responses (
     submission_id          text primary key,

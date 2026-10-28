@@ -1,0 +1,4 @@
+# Everything needed to run the app and its test suite locally. Streamlit Cloud
+# installs requirements.txt only.
+-r requirements.txt
+pytest>=8
